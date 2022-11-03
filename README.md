@@ -34,30 +34,33 @@ this approach has some advantages.
 
 As an illustration, consider the following set of images.
 
-- Cinema Show (folder - maybe defined as an additional resource folder?)
+- cinema-show-source (folder - ignored by `git`)
   - Show 1 (folder)
-    - meta.json
-      - blocksx = 5
-      - frametime = 25
+    - meta.yaml
+      - blocksX = 5
+      - frameTime = 25
+      - assignToBlock = "screen_alpha"
     - Image 0.jpg
     - Image 1.png
     - Image 2.jpg
   - Show 2 (folder)
-    - meta.json
-      - blocksy = 3
-      - frametime = 10
+    - meta.yaml
+      - blocksY = 3
+      - frameTime = 10
+      - assignToBlock = "screen_zulu"
     - Image A.png
     - Image B.png
     - Image C.jpg
     - Image D.png
 
-Each folder defines a separate film for which a different set of resources will be generated.
-The shows will be assigned to screen slots in lexicographic order. So "Show 1" will be assigned
-to `screen-alpha` and "Show 2" will be assigned to `screen-bravo`. 
+Each folder defines a separate show (a set of image files) for which a different set of resources
+will be generated. Along with the set of image files there is `meta.yaml` that defines various
+properties. For instance, the `assignToBlock` parameter defines which screen block the show will be
+assigned to.
 
 For folder "Show 1":
 
-- Each image is re-sized on the X axis according to `blocksx` i.e. `5 * 16 = 80 px` and on the 
+- Each image is re-sized on the X axis according to `blocksX` i.e. `5 * 16 = 80 px` and on the 
   Y axis such that the aspect ratio is preserved.
 - The minimum image Y length (rounded down to the nearest factor of 16) is calculated.
 - Each image is cropped centrally to this length.
@@ -65,20 +68,20 @@ For folder "Show 1":
   For instance, the 3 squares from the bottom left of each image are re-constituted as a 
   `16 x 48 px` image named `{block name}-{x index}-{y index}.png`.
 - With each new image a `{block name}-{x index}-{y index}.mcmeta` file is created that defines the
-  animation frame rate as `frametime` (defined in ticks).
+  animation frame rate as `frameTime` (defined in ticks).
 - The images are outputted to the `generated` resource folder in the 
-  `assets.cinemashow.texture.block` package.
+  `assets.cinemashow.textures.block` package.
 
 Note:
 
-- For "Show 2" `blocksy` is specified for so the same re-size/crop method is applied but for a
+- For "Show 2" `blocksY` is specified for so the same re-size/crop method is applied but for a
   different axis.
 - The lexicographic order of the image files will give the play order. The image file name is not
   used for anything else.
 
 ## Running
 
-- A gradle task `generateTextures` is defined to run the process described above.
+- A gradle task `runGenerateTextures` is defined to run the process described above.
 - The [data generation task (`runData`)](https://docs.minecraftforge.net/en/latest/datagen/)
   generates the resources for these textures.
 - The normal `build` task can be used to generate the final `jar`.
@@ -91,36 +94,36 @@ Note:
 - It should be possible to tag screen blocks with their show names (eg, "Show 1") to improve the
   block search.
 - Could have a separate tab for the screen blocks.
-- Might be preferable to assign shows to screens using `meta.json`.
 - Need to think placing up/down facing screens (each can face in four directions).
+- Gradle config: It isn't clear to me how to generate separate data packs
 - [The Cinema Show (showing my age)](https://www.youtube.com/watch?v=G501Ii0X0NE).
 
-### Show Block Names
+### Screen Block Names
 
-- `screen-alpha`
-- `screen-bravo`
-- `screen-charlie`
-- `screen-delta`
-- `screen-echo`
-- `screen-foxtrot`
-- `screen-golf`
-- `screen-hotel`
-- `screen-india`
-- `screen-juliet`
-- `screen-kilo`
-- `screen-lima`
-- `screen-mike`
-- `screen-november`
-- `screen-oscar`
-- `screen-papa`
-- `screen-quebec`
-- `screen-romeo`
-- `screen-sierra`
-- `screen-tango`
-- `screen-uniform`
-- `screen-victor`
-- `screen-whiskey`
-- `screen-xray`
-- `screen-yankee`
-- `screen-zulu`
+- `screen_alpha`
+- `screen_bravo`
+- `screen_charlie`
+- `screen_delta`
+- `screen_echo`
+- `screen_foxtrot`
+- `screen_golf`
+- `screen_hotel`
+- `screen_india`
+- `screen_juliet`
+- `screen_kilo`
+- `screen_lima`
+- `screen_mike`
+- `screen_november`
+- `screen_oscar`
+- `screen_papa`
+- `screen_quebec`
+- `screen_romeo`
+- `screen_sierra`
+- `screen_tango`
+- `screen_uniform`
+- `screen_victor`
+- `screen_whiskey`
+- `screen_xray`
+- `screen_yankee`
+- `screen_zulu`
 
