@@ -20,6 +20,13 @@ build
 # other
 eclipse
 run
+logs/
 
 # Files from Forge MDK
 forge*changelog.txt
+
+# input source images
+cinema-show-source/
+
+# resources generated from `runGenerateTextures` and `runData`
+src/generated/
