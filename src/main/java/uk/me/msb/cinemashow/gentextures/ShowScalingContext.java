@@ -1,17 +1,12 @@
-package uk.me.msb;
+package uk.me.msb.cinemashow.gentextures;
 
-import org.apache.commons.lang3.NotImplementedException;
-import org.jetbrains.annotations.NotNull;
+import uk.me.msb.cinemashow.ShowProperties;
+import uk.me.msb.cinemashow.TileIterableIterator;
 
 import java.awt.*;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Spliterator;
-import java.util.function.Consumer;
 
 /**
  * The purpose of this context class is two fold:
- * 
  * - The source image is scaled according either axis depending on which property is defined.
  *   To simplify the code in `GenerateTextures`, this class abstracts which axis is defined.
  * - The secondary axis is cropped based on the minimum lengths of all the show's frame images.
@@ -62,84 +57,26 @@ public class ShowScalingContext {
 
     /**
      * Returns an `Iterable` that iterates over the positions of all the show's tiles.
+     * Also updates ShowProperties.blocks2ndAxis.
      * 
      * @return the `Iterable`
      */
     public Iterable<Point> positions() {
+        // rounds `min2ndAxisLength` down to the nearest `PIXELS_PER_BLOCK` (idempotent)
         min2ndAxisLength -= min2ndAxisLength % PIXELS_PER_BLOCK;
-        return new TileIterableIterator();
+
+        if (props.getBlocksX() == 0) {
+            props.setBlocksX(min2ndAxisLength / PIXELS_PER_BLOCK);
+        } else {
+            props.setBlocksY(min2ndAxisLength / PIXELS_PER_BLOCK);
+        }
+        return new TileIterableIterator(props);
     }
 
     /**
-     * A partially implemented `Iterable` that iterates over the positions of all the show's tiles.
-     * For simplicity the class also implements the `Iterator` so `Iterable.iterator()` just
-     * returns `this`.
-     */
-    class TileIterableIterator implements Iterable<Point>, Iterator<Point> {
-
-        /**
-         * Tracks the next value for `Iterator.next()` and is set to `null` on completion.
-         */
-        private Point next = new Point();
-        
-        /**
-         * The upper bounds on the tile positions.
-         */
-        final private Point limit;
-
-        public TileIterableIterator() {
-            if (props.getBlocksX() == 0) {
-                limit = new Point(min2ndAxisLength / PIXELS_PER_BLOCK, props.getBlocksY());
-            } else {
-                limit = new Point(props.getBlocksX(), min2ndAxisLength / PIXELS_PER_BLOCK);
-            }
-        }
-
-        @NotNull
-        @Override
-        public Iterator<Point> iterator() {
-            return this;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return next != null;
-        }
-
-        @Override
-        public Point next() {
-            if (next == null) {
-                throw new NoSuchElementException();
-            }
-            Point copyOfNext = next.getLocation();
-            next.translate(1, 0);
-            if (next.x == limit.x) {
-                next.x = 0;
-                next.translate(0, 1);
-            }
-            if (next.y == limit.y) {
-                next = null;
-            }
-            return copyOfNext;
-        }
-
-        @Override
-        public void forEach(Consumer<? super Point> action) {
-            throw new NotImplementedException();
-        }
-
-        @Override
-        public Spliterator<Point> spliterator() {
-            throw new NotImplementedException();
-        }
-    }
-
-    /**
-     * Returns the offset into the image used to crop along the secondary axis.
-     * 
      * @param imageWidth  the source frame image's width
      * @param imageHeight the source frame image's height
-     * @return
+     * @return the offset into the image used to crop along the secondary axis.
      */
     public Point getOffset(int imageWidth, int imageHeight) {
         if (props.getBlocksX() == 0) {
