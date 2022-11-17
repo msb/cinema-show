@@ -28,23 +28,26 @@ this approach has some advantages.
   - dropped in.
 - Disadvantages of the single block per screen approach
   - The number of screens is limited.
-  - The dimensions of the screens are limited to 10x10 blocks (do we need to limit this?).
+  - MC doesn't seem optimised for handling custom state large number of possible values so the 
+    dimensions of the screens are limited to 9x9 blocks.
 
 ## How the image processing works
 
 As an illustration, consider the following set of images.
 
 - cinema-show-source (folder - ignored by `git`)
-  - Show 1 (folder)
+  - 1st-show (folder)
     - meta.yaml
+      - showName = "Falling down"
       - blocksX = 5
       - frameTime = 25
       - assignToBlock = "screen_alpha"
     - Image 0.jpg
     - Image 1.png
     - Image 2.jpg
-  - Show 2 (folder)
+  - something-else (folder)
     - meta.yaml
+      - showName = "Getting up"
       - blocksY = 3
       - frameTime = 10
       - assignToBlock = "screen_zulu"
@@ -58,7 +61,7 @@ will be generated. Along with the set of image files there is `meta.yaml` that d
 properties. For instance, the `assignToBlock` parameter defines which screen block the show will be
 assigned to.
 
-For folder "Show 1":
+For folder "1st-show":
 
 - Each image is re-sized on the X axis according to `blocksX` i.e. `5 * 16 = 80 px` and on the 
   Y axis such that the aspect ratio is preserved.
@@ -69,8 +72,11 @@ For folder "Show 1":
   `16 x 48 px` image named `{block name}-{x index}-{y index}.png`.
 - With each new image a `{block name}-{x index}-{y index}.mcmeta` file is created that defines the
   animation frame rate as `frameTime` (defined in ticks).
-- The images are outputted to the `generated` resource folder in the 
+- The images are outputted to the `generatedTextures` resource folder in the 
   `assets.cinemashow.textures.block` package.
+- The `meta.yaml` is written to `assets.cinemashow` as `{block name}.yaml` to be available to the
+  code during resource generation (see above) and in-game. Additionally `blocks2ndAxis` is written
+  to this file (in this case `blocksX`).
 
 Note:
 
@@ -85,17 +91,20 @@ Note:
 - The [data generation task (`runData`)](https://docs.minecraftforge.net/en/latest/datagen/)
   generates the resources for these textures.
 - The normal `build` task can be used to generate the final `jar`.
-- How to we create seperate mod and datapack jars.
+- TODO: How do we create separate mod and datapack jars?
 
 ## Assumptions/Limitations/Notes
 
-- This looks like a good example for
-  [Simple Java Image Scaling and Cropping](https://medium.com/@SatyaRaj_PC/simple-java-image-scaling-and-cropping-33f95e7d9278).
-- It should be possible to tag screen blocks with their show names (eg, "Show 1") to improve the
-  block search.
-- Could have a separate tab for the screen blocks.
-- Need to think placing up/down facing screens (each can face in four directions).
+- [An in-game example](https://youtu.be/OOTtlrH0opE). TODO replace this with a better one.
+- Build: For simplicity of deployment I'm including the classes from the additional `cinemashow`
+  dependencies directly in the MOD jar. This feel a bit hacky
 - Gradle config: It isn't clear to me how to generate separate data packs
+- MC isn't optimised for dealing with state `Property` objects with a large number of possible values (ScreenStateProperty).
+- I think everything except `assignToBlock` in `meta.yaml` could be defaulted.
+- If we ditched support for YAML we could use Forge's own JSON encoder and keep the deps a bit simpler.
+- When testing with server you need to:
+  - update `run/eula.txt`
+  - in `run/server.properties` set `online-mode=false`
 - [The Cinema Show (showing my age)](https://www.youtube.com/watch?v=G501Ii0X0NE).
 
 ### Screen Block Names

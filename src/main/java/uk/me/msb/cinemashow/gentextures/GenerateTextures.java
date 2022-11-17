@@ -1,14 +1,16 @@
-package uk.me.msb;
+package uk.me.msb.cinemashow.gentextures;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
+import uk.me.msb.cinemashow.ShowProperties;
 
 import javax.imageio.ImageIO;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -25,6 +27,11 @@ public class GenerateTextures {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     /**
+     * The expected file name of the YAML file for the show's properties.
+     */
+    public static final String METADATA_FILENAME = "meta.yaml";
+
+    /**
      * The image format type of the output textures
      */
     public static final String FORMAT_TYPE = "png";
@@ -35,20 +42,28 @@ public class GenerateTextures {
     private final File srcDir;
 
     /**
-     * The destination folder for the show texture files.
+     * The root folder of mod's assets
      */
-    private final File dstDir;
+    private final File assetsDir;
 
-    public GenerateTextures(String srcDir, String dstDir) {
-        this.dstDir = new File(dstDir);
+    /**
+     * The sub asset folder for block textures
+     */
+    private final File texturesDir;
+
+    public GenerateTextures(String srcDir, String assetsDir) {
         this.srcDir = new File(srcDir);
+        this.assetsDir = new File(assetsDir);
+        this.texturesDir = Paths.get(
+                this.assetsDir.getAbsolutePath(), "textures", "block"
+        ).toFile();
     }
 
     private void run() {
 
         // create the destination folder, if necessary
         try {
-            Files.createDirectories(Paths.get(dstDir.getAbsolutePath()));
+            Files.createDirectories(texturesDir.toPath());
         } catch (IOException e) {
             throw new RuntimeException("IO error creating the destination folder", e);
         }
@@ -76,7 +91,12 @@ public class GenerateTextures {
     public void processShow(File showDir) throws IOException {
 
         // read the show's properties
-        ShowProperties props = ShowProperties.create(showDir);
+        File metadata = new File(showDir.getAbsolutePath(), METADATA_FILENAME);
+        ShowProperties props = ShowProperties.create(new FileInputStream(metadata));
+        // additional validation
+        if (props.getBlocksX() != 0 && props.getBlocksY() != 0) {
+            throw new IllegalArgumentException("Only blocksX or blocksY can be set");
+        }
         // initialise the scaling context
         ShowScalingContext context = new ShowScalingContext(props);
 
@@ -117,11 +137,15 @@ public class GenerateTextures {
             // write the animated texture image and associated metadata to the assigned screen
             // block (the tile position is also encoded in the file name)
             String outputFileName = String.format(
-                "%s_%d_%d", props.assignToBlock, position.x, position.y
+                "%s_%d_%d", props.getAssignToBlock(), position.x, position.y
             );
             outputImage(outputFileName, outputImage);
             outputMetadata(outputFileName, props);
         }
+
+        // Save the updated `ShowProperties` as a resource (to be available in-game, etc)
+        String metadataResourceName = String.format("%s.yaml", props.getAssignToBlock());
+        props.save(new File(assetsDir, metadataResourceName));
     }
 
     /**
@@ -174,7 +198,7 @@ public class GenerateTextures {
      * @throws IOException possible error when writing file
      */
     private void outputImage(String outputFileName, BufferedImage outputImage) throws IOException {
-        File imageFile = new File(dstDir, String.format("%s.%s", outputFileName, FORMAT_TYPE));
+        File imageFile = new File(texturesDir, String.format("%s.%s", outputFileName, FORMAT_TYPE));
         ImageIO.write(outputImage, FORMAT_TYPE, imageFile);
     }
 
@@ -186,14 +210,16 @@ public class GenerateTextures {
      * @throws IOException possible error when writing file
      */
     private void outputMetadata(String outputFileName, ShowProperties props) throws IOException {
-        File metadataFile = new File(dstDir, String.format("%s.mcmeta", outputFileName));
+        File metadataFile = new File(
+                texturesDir, String.format("%s.%s.mcmeta", outputFileName, FORMAT_TYPE)
+        );
         (new ObjectMapper()).writeValue(metadataFile, props.getMcmeta());
     }
 
     public static void main(String[] args) {
 
         LOGGER.info(
-            "Generating textures using %s as source folder and %s destination.",
+            "Generating textures using {} as source folder and {} destination.",
             args[0], args[1]
         );
 
