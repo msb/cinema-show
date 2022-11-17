@@ -204,3 +204,45 @@ task runGenerateTextures (type: JavaExec) {
             "${project.projectDir}/${textureGeneratorResources}/assets/cinemashow"
     ]
 }
+
+// `copyExtraDepsToBuild` (along with `gatherExtraDeps`) extracts and copies the `cinemashow`
+// dependencies into the build path so that they will be included in the MOD jar.
+// TODO:
+// I'm unfamiliar with both build MC mods and the gradle system but what I've done feels pretty
+// hacky. Look into a more idiomatic way of structuring of structuring this deployment.
+
+task gatherExtraDeps(type: Copy) {
+    group = customTaskGroup
+    from configurations.cinemashow
+    into "${buildDir}/cinemashow-deps"
+    // filtering as is causing a conflict (hacky)
+    exclude '**/commons-lang3-*.jar'
+}
+
+task copyExtraDepsToBuild {
+    group = customTaskGroup
+    doLast {
+        copy {
+            // TODO would ideally like to copy only `*.class` files
+            includeEmptyDirs = false
+            duplicatesStrategy = DuplicatesStrategy.INCLUDE
+            fileTree(dir: "${buildDir}/cinemashow-deps", includes: ['**/*.jar']).each { jarFile ->
+                from zipTree(jarFile)
+            }
+            into "${buildDir}/classes/java/main"
+        }
+    }
+}
+
+copyExtraDepsToBuild.dependsOn gatherExtraDeps
+jar.dependsOn copyExtraDepsToBuild
+
+task usefulDebug {
+    group = customTaskGroup
+    doLast {
+        println "********* USEFUL DEBUG *********"
+        configurations.cinemashow.each {println it }
+        configurations.minecraft.each {println it }
+        println "********* USEFUL DEBUG *********"
+    }
+}
