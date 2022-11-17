@@ -101,7 +101,7 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-            args '--mod', 'cinemashow', '--all', '--output', file(dataGeneratorResources), '--existing', file('src/main/resources/')
+            args '--mod', 'cinemashow', '--all', '--output', file(dataGeneratorResources), '--existing', file('src/main/resources/'), '--existing', file(textureGeneratorResources)
 
             mods {
                 cinemashow {
