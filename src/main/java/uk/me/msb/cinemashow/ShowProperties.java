@@ -11,21 +11,25 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 /**
- * Model class defining a show's properties. `create()` read the properties a YAML file using
- * `ObjectMapper` and validates them before returning the model.
+ * Model class defining a show's properties. `create()` read the properties a YAML file using `ObjectMapper` and
+ * validates them before returning the model.
+ *
+ * Note that MC isn't optimised for dealing with state `Property` objects with a large number of possible values. There
+ * the max blocks has been limited to 6 to reduce the number of possible values for `ScreenStateProperty`.
+ *
  * TODO `ObjectMapper` annotations could probably used to do a neater job of the validation.
  */
 public class ShowProperties {
 
     /**
-     * Upper limit of blocksX
+     * Upper limit of blocksX.
      */
-    public static final int BLOCKS_X_MAX = 9;
+    public static final int BLOCKS_X_MAX = 6; // see note above
 
     /**
      * Upper limit of blocksY
      */
-    public static final int BLOCKS_Y_MAX = 9;
+    public static final int BLOCKS_Y_MAX = 6; // see note above
 
     /**
      * The name of the show (used in the language resource)
