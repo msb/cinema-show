@@ -37,7 +37,7 @@ As an illustration, consider the following set of images.
 
 - cinema-show-source (folder - ignored by `git`)
   - 1st-show (folder)
-    - meta.yaml
+    - meta.json
       - showName = "Falling down"
       - blocksX = 5
       - frameTime = 25
@@ -46,7 +46,7 @@ As an illustration, consider the following set of images.
     - Image 1.png
     - Image 2.jpg
   - something-else (folder)
-    - meta.yaml
+    - meta.json
       - showName = "Getting up"
       - blocksY = 3
       - frameTime = 10
@@ -57,7 +57,7 @@ As an illustration, consider the following set of images.
     - Image D.png
 
 Each folder defines a separate show (a set of image files) for which a different set of resources
-will be generated. Along with the set of image files there is `meta.yaml` that defines various
+will be generated. Along with the set of image files there is `meta.json` that defines various
 properties. For instance, the `assignToBlock` parameter defines which screen block the show will be
 assigned to.
 
@@ -74,9 +74,9 @@ For folder "1st-show":
   animation frame rate as `frameTime` (defined in ticks).
 - The images are outputted to the `generatedTextures` resource folder in the 
   `assets.cinemashow.textures.block` package.
-- The `meta.yaml` is written to `assets.cinemashow` as `{block name}.yaml` to be available to the
-  code during resource generation (see above) and in-game. Additionally `blocks2ndAxis` is written
-  to this file (in this case `blocksX`).
+- The `meta.json` is written to `assets.cinemashow` as `{block name}.json` to be available to the
+  code during resource generation (see above) and in-game. Additionally `blocksY` is written to
+  this file.
 
 Note:
 
@@ -84,6 +84,10 @@ Note:
   different axis.
 - The lexicographic order of the image files will give the play order. The image file name is not
   used for anything else.
+- If `frameTime` isn't given,
+  [a default is assumed](https://github.com/msb/cinema-show/blob/main/src/main/java/uk/me/msb/cinemashow/ShowProperties.java#L29).
+- If neither `blocksX` or `blocksY` is given,
+  [`blocksX` is set to the maximum value](https://github.com/msb/cinema-show/blob/main/src/main/java/uk/me/msb/cinemashow/ShowProperties.java#L39).
 
 ## Running
 
@@ -100,8 +104,6 @@ Note:
   dependencies directly in the MOD jar. This feel a bit hacky
 - Gradle config: It isn't clear to me how to generate separate data packs
 - MC isn't optimised for dealing with state `Property` objects with a large number of possible values (ScreenStateProperty).
-- I think everything except `assignToBlock` in `meta.yaml` could be defaulted.
-- If we ditched support for YAML we could use Forge's own JSON encoder and keep the deps a bit simpler.
 - When testing with server you need to:
   - update `run/eula.txt`
   - in `run/server.properties` set `online-mode=false`

@@ -1,14 +1,11 @@
 package uk.me.msb.cinemashow;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonWriter;
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import java.io.*;
 
 /**
  * Model class defining a show's properties. `create()` read the properties a YAML file using `ObjectMapper` and
@@ -16,10 +13,15 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
  *
  * Note that MC isn't optimised for dealing with state `Property` objects with a large number of possible values. There
  * the max blocks has been limited to 6 to reduce the number of possible values for `ScreenStateProperty`.
- *
- * TODO `ObjectMapper` annotations could probably used to do a neater job of the validation.
  */
 public class ShowProperties {
+
+    private static final Logger LOGGER = LogUtils.getLogger();
+
+    /**
+     * Gson instance.
+     */
+    private static final Gson GSON = new Gson();
 
     /**
      * Upper limit of blocksX.
@@ -27,13 +29,19 @@ public class ShowProperties {
     public static final int BLOCKS_X_MAX = 6; // see note above
 
     /**
-     * Upper limit of blocksY
+     * Upper limit of blocksY.
      */
     public static final int BLOCKS_Y_MAX = 6; // see note above
 
     /**
-     * The name of the show (used in the language resource)
+     * Default value if `franeTime` not set.
      */
+    private static final int DEFAULT_FRAME_TIME = 25;
+
+    /**
+     * The name of the show (used in the language resource).
+     */
+    @SuppressWarnings("unused") // used by `GSON.fromJson()`
     private String showName;
 
     /**
@@ -52,23 +60,18 @@ public class ShowProperties {
     private int blocksY;
 
     /**
-     * The JSON structure used to serialise `frameTime` to the `mcmeta` file.
+     * The JSON string created from `frameTime` for the texture `mcmeta` file.
      */
-    @JsonIgnore
-    private Map<String, Map<String, Integer>> mcmeta;
+    private transient String mcmeta;
 
     /**
      * The screen block the show is assigned to.
      */
+    @SuppressWarnings("unused") // used by `GSON.fromJson()`
     private ScreenBlockName assignToBlock;
 
     public String getShowName() {
         return showName;
-    }
-
-    @SuppressWarnings("unused") // used by `ObjectMapper`
-    public void setShowName(String showName) {
-        this.showName = showName;
     }
 
     public int getBlocksX() {
@@ -78,7 +81,6 @@ public class ShowProperties {
     /**
      * Sets and validates `blocksX`.
      */
-    @SuppressWarnings("unused") // used by `ObjectMapper`
     public void setBlocksX(int blocksX) {
         if (blocksX < 0) {
             throw new IllegalArgumentException("blocksX should be greater than zero");
@@ -98,7 +100,6 @@ public class ShowProperties {
     /**
      * Sets and validates `blocksY`.
      */
-    @SuppressWarnings("unused") // used by `ObjectMapper`
     public void setBlocksY(int blocksY) {
         if (blocksY < 0) {
             throw new IllegalArgumentException("blocksY should be greater than zero");
@@ -111,59 +112,63 @@ public class ShowProperties {
         this.blocksY = blocksY;
     }
 
-    @SuppressWarnings("unused") // used by `ObjectMapper`
-    public int getFrameTime() {
-        return frameTime;
-    }
-
     /**
-     * Validates `frameTime` and sets `mcmeta`.
+     * Validates `frameTime`.
      */
-    @SuppressWarnings("unused") // used by `ObjectMapper`
     public void setFrameTime(int frameTime) {
         if (frameTime < 0) {
             throw new IllegalArgumentException("frameTime should be greater than zero");
         }
         this.frameTime = frameTime;
-        Map<String, Integer> animation = new HashMap<>();
-        animation.put("frametime", frameTime);
-        mcmeta = new HashMap<>();
-        mcmeta.put("animation", animation);
     }
 
     public ScreenBlockName getAssignToBlock() {
         return assignToBlock;
     }
 
-    @SuppressWarnings("unused") // used by `ObjectMapper`
-    public void setAssignToBlock(ScreenBlockName assignToBlock) {
-        this.assignToBlock = assignToBlock;
-    }
-
-    public Object getMcmeta() {
+    public String getMcmeta() {
         return mcmeta;
     }
 
     /**
-     * Reads the show's properties `metadata` (YAML format) and validates.
+     * Reads the show's properties `metadata` (JSON format) and validates.
      * 
      * @param metadata the resource's input stream
      * @return The validated show properties.
      * @throws IOException Errors resulting from parsing `metadata`.
      */
     public static ShowProperties create(InputStream metadata) throws IOException {
-        ObjectMapper mapper = new YAMLMapper();
-        ShowProperties properties =  mapper.readValue(metadata, ShowProperties.class);
-        if (properties.assignToBlock == null) {
-            throw new IllegalArgumentException("assignToBlock is not defined");
+        ShowProperties props = GSON.fromJson(new InputStreamReader(metadata), ShowProperties.class);
+        if (props.frameTime == 0) {
+            props.setFrameTime(ShowProperties.DEFAULT_FRAME_TIME);
+            LOGGER.warn("`frameTime` not defined - setting to {}", props.frameTime);
         }
-        if (properties.getMcmeta() == null) {
-            throw new IllegalArgumentException("frameTime is not defined");
+        props.mcmeta = createMcmeta(props.frameTime);
+        if (props.blocksX == 0 && props.blocksY == 0) {
+            props.setBlocksX(ShowProperties.BLOCKS_X_MAX);
+            LOGGER.warn("Neither `blocksX` nor `blocksY` are defined - setting `blocksX` to {}", props.blocksX);
+
         }
-        if (properties.blocksX == 0 && properties.blocksY == 0) {
-            throw new IllegalArgumentException("One of blocksX and blocksY must be defined");
-        }
-        return properties;
+        return props;
+    }
+
+    /**
+     * Serialises `frameTime` as a JSON string for the texture `mcmeta` file.
+     *
+     * @param frameTime the animation rate
+     * @return JSON string
+     * @throws IOException Errors resulting from writing `mcmeta`.
+     */
+    private static String createMcmeta(int frameTime) throws IOException {
+        StringWriter writer = new StringWriter();
+        JsonWriter json = (new Gson()).newJsonWriter(writer);
+        json.beginObject();
+        json.name("animation").beginObject();
+        json.name("frametime").value(frameTime);
+        json.endObject();
+        json.endObject();
+        json.close();
+        return writer.toString();
     }
 
     /**
@@ -173,6 +178,8 @@ public class ShowProperties {
      * @throws IOException Errors resulting from writing the file.
      */
     public void save(File metadata) throws IOException {
-        (new YAMLMapper()).writeValue(metadata, this);
+        try (Writer writer = new FileWriter(metadata)) {
+            GSON.toJson(this, writer);
+        }
     }
 }
