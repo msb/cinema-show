@@ -50,7 +50,7 @@ public class Registration {
 
         // check each block name for any show metadata resource files and populate `SHOW_PROPERTIES`
         for (ScreenBlockName name: ScreenBlockName.values()) {
-            String resource = String.format("/assets/%s/%s.yaml", MODID, name);
+            String resource = String.format("/assets/%s/%s.json", MODID, name);
             InputStream metadata = name.getClass().getResourceAsStream(resource);
             if (metadata != null) {
                 try {

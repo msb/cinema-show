@@ -1,6 +1,5 @@
 package uk.me.msb.cinemashow.gentextures;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 import uk.me.msb.cinemashow.ShowProperties;
@@ -9,9 +8,7 @@ import javax.imageio.ImageIO;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -29,7 +26,7 @@ public class GenerateTextures {
     /**
      * The expected file name of the YAML file for the show's properties.
      */
-    public static final String METADATA_FILENAME = "meta.yaml";
+    public static final String METADATA_FILENAME = "meta.json";
 
     /**
      * The image format type of the output textures
@@ -144,7 +141,7 @@ public class GenerateTextures {
         }
 
         // Save the updated `ShowProperties` as a resource (to be available in-game, etc)
-        String metadataResourceName = String.format("%s.yaml", props.getAssignToBlock());
+        String metadataResourceName = String.format("%s.json", props.getAssignToBlock());
         props.save(new File(assetsDir, metadataResourceName));
     }
 
@@ -213,7 +210,9 @@ public class GenerateTextures {
         File metadataFile = new File(
                 texturesDir, String.format("%s.%s.mcmeta", outputFileName, FORMAT_TYPE)
         );
-        (new ObjectMapper()).writeValue(metadataFile, props.getMcmeta());
+        try (Writer writer = new FileWriter(metadataFile)) {
+            writer.write(props.getMcmeta());
+        }
     }
 
     public static void main(String[] args) {
