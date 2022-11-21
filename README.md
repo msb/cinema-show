@@ -85,9 +85,9 @@ Note:
 - The lexicographic order of the image files will give the play order. The image file name is not
   used for anything else.
 - If `frameTime` isn't given,
-  [a default is assumed](https://github.com/msb/cinema-show/blob/main/src/main/java/uk/me/msb/cinemashow/ShowProperties.java#L29).
+  [a default is assumed](https://github.com/msb/cinema-show/blob/main/src/main/java/uk/me/msb/cinemashow/ShowProperties.java#L36).
 - If neither `blocksX` or `blocksY` is given,
-  [`blocksX` is set to the maximum value](https://github.com/msb/cinema-show/blob/main/src/main/java/uk/me/msb/cinemashow/ShowProperties.java#L39).
+  [`blocksX` is set to the maximum value](https://github.com/msb/cinema-show/blob/main/src/main/java/uk/me/msb/cinemashow/ShowProperties.java#L26).
 
 ## Running
 
