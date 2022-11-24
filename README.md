@@ -10,26 +10,13 @@ This project does 3 things:
 
 ## The Game Mechanics
 
-26 new "screen" blocks are registered by the mod. These can be thought of as slots to assign your
-animation to. They are named using the phonetic alphabet (see below). In-game, if a screen has
-been assigned a show and that screen block is placed it will render as the bottom left tile of the
-show with the screen facing towards you. Then as you place blocks above (relatively) and to the
-right of the previous blocks they render the correct tile for the show (facing in the same direction
-as the other block). If you place a screen block above/right outside bounds of the animation it will
-render as a warning block. If you place a screen block anywhere else it will render as a new bottom
-left tile.
-
-I had originally considered using different blocks for the different screen tiles. However, I think
-this approach has some advantages. 
-
-- Advantages of the single block per screen approach
-  - Constructing a screen in-game is much simpler.
-  - A full mod rebuild isn't required for every new show - data packs with new show can be
-  - dropped in.
-- Disadvantages of the single block per screen approach
-  - The number of screens is limited.
-  - MC doesn't seem optimised for handling custom state large number of possible values so the 
-    dimensions of the screens are limited to 9x9 blocks.
+A defined show can be constructed from a single screen block. The screen block can be searched for
+in the inventory by it's show name. When this block is placed it will render as the bottom left
+tile of the show with the screen facing towards you. Then as you place blocks above (relatively)
+and to the right of the previous blocks they render the correct tile for the show (facing in the
+same direction as the other block). If you place a screen block above/right outside the bounds of
+the show it will render as a new bottom left tile. If you place a screen block anywhere else it
+also will render as a new bottom left tile.
 
 ## How the image processing works
 
@@ -41,7 +28,6 @@ As an illustration, consider the following set of images.
       - showName = "Falling down"
       - blocksX = 5
       - frameTime = 25
-      - assignToBlock = "screen_alpha"
     - Image 0.jpg
     - Image 1.png
     - Image 2.jpg
@@ -50,7 +36,6 @@ As an illustration, consider the following set of images.
       - showName = "Getting up"
       - blocksY = 3
       - frameTime = 10
-      - assignToBlock = "screen_zulu"
     - Image A.png
     - Image B.png
     - Image C.jpg
@@ -58,8 +43,7 @@ As an illustration, consider the following set of images.
 
 Each folder defines a separate show (a set of image files) for which a different set of resources
 will be generated. Along with the set of image files there is `meta.json` that defines various
-properties. For instance, the `assignToBlock` parameter defines which screen block the show will be
-assigned to.
+properties. For instance, the `showName` parameter defines the show name.
 
 For folder "1st-show":
 
@@ -69,13 +53,13 @@ For folder "1st-show":
 - Each image is cropped centrally to this length.
 - The images are cut into separate block textures and "collated" as animated block textures.
   For instance, the 3 squares from the bottom left of each image are re-constituted as a 
-  `16 x 48 px` image named `{block name}-{x index}-{y index}.png`.
-- With each new image a `{block name}-{x index}-{y index}.mcmeta` file is created that defines the
-  animation frame rate as `frameTime` (defined in ticks).
+  `16 x 48 px` image named `{showName slug}-{x index}-{y index}.png`
+- With each new image a `{showName slug}-{x index}-{y index}.mcmeta` file is created that defines
+  the animation frame rate as `frameTime` (defined in ticks).
 - The images are outputted to the `generatedTextures` resource folder in the 
   `assets.cinemashow.textures.block` package.
-- The `meta.json` is written to `assets.cinemashow` as `{block name}.json` to be available to the
-  code during resource generation (see above) and in-game. Additionally `blocksY` is written to
+- The `meta.json` is written to `assets.cinemashow` as `{showName slug}.json` to be available to
+  the code during resource generation (see above) and in-game. Additionally `blocksY` is written to
   this file.
 
 Note:
@@ -88,6 +72,7 @@ Note:
   [a default is assumed](https://github.com/msb/cinema-show/blob/main/src/main/java/uk/me/msb/cinemashow/ShowProperties.java#L36).
 - If neither `blocksX` or `blocksY` is given,
   [`blocksX` is set to the maximum value](https://github.com/msb/cinema-show/blob/main/src/main/java/uk/me/msb/cinemashow/ShowProperties.java#L26).
+- If `showName` isn't given, it is given the name of the show folder.
 
 ## Running
 
@@ -107,33 +92,3 @@ Note:
   - update `run/eula.txt`
   - in `run/server.properties` set `online-mode=false`
 - [The Cinema Show (showing my age)](https://www.youtube.com/watch?v=G501Ii0X0NE).
-
-### Screen Block Names
-
-- `screen_alpha`
-- `screen_bravo`
-- `screen_charlie`
-- `screen_delta`
-- `screen_echo`
-- `screen_foxtrot`
-- `screen_golf`
-- `screen_hotel`
-- `screen_india`
-- `screen_juliet`
-- `screen_kilo`
-- `screen_lima`
-- `screen_mike`
-- `screen_november`
-- `screen_oscar`
-- `screen_papa`
-- `screen_quebec`
-- `screen_romeo`
-- `screen_sierra`
-- `screen_tango`
-- `screen_uniform`
-- `screen_victor`
-- `screen_whiskey`
-- `screen_xray`
-- `screen_yankee`
-- `screen_zulu`
-
