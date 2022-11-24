@@ -103,7 +103,6 @@ Note:
 - Build: For simplicity of deployment I'm including the classes from the additional `cinemashow`
   dependencies directly in the MOD jar. This feel a bit hacky
 - Gradle config: It isn't clear to me how to generate separate data packs
-- MC isn't optimised for dealing with state `Property` objects with a large number of possible values (ScreenStateProperty).
 - When testing with server you need to:
   - update `run/eula.txt`
   - in `run/server.properties` set `online-mode=false`

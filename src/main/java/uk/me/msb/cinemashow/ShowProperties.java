@@ -10,9 +10,6 @@ import java.io.*;
 /**
  * Model class defining a show's properties. `create()` read the properties a YAML file using `ObjectMapper` and
  * validates them before returning the model.
- *
- * Note that MC isn't optimised for dealing with state `Property` objects with a large number of possible values. There
- * the max blocks has been limited to 6 to reduce the number of possible values for `ScreenStateProperty`.
  */
 public class ShowProperties {
 
@@ -26,12 +23,12 @@ public class ShowProperties {
     /**
      * Upper limit of blocksX.
      */
-    public static final int BLOCKS_X_MAX = 6; // see note above
+    public static final int BLOCKS_X_MAX = 10;
 
     /**
      * Upper limit of blocksY.
      */
-    public static final int BLOCKS_Y_MAX = 6; // see note above
+    public static final int BLOCKS_Y_MAX = 10;
 
     /**
      * Default value if `franeTime` not set.

@@ -10,7 +10,7 @@ import java.util.Objects;
  * Model representing the direction an entity or block is facing. Note that two directions are required because if an
  * entity/block is facing `UP` it will still have a `horizontal` orientation.
  */
-public class Facing {
+public class Facing implements Comparable<Facing> {
 
     /**
      * All possible `horizontal` values.
@@ -66,6 +66,11 @@ public class Facing {
     @Override
     public int hashCode() {
         return Objects.hash(horizontal, vertical);
+    }
+
+    @Override
+    public int compareTo(Facing o) {
+        return toString().compareTo(o.toString());
     }
 
     /**
