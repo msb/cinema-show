@@ -3,20 +3,14 @@ package uk.me.msb.cinemashow.datagen;
 import net.minecraft.core.Direction;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.client.model.generators.BlockModelBuilder;
-import net.minecraftforge.client.model.generators.BlockStateProvider;
-import net.minecraftforge.client.model.generators.ConfiguredModel;
-import net.minecraftforge.client.model.generators.MultiPartBlockStateBuilder;
-import net.minecraftforge.client.model.generators.MultiPartBlockStateBuilder.PartBuilder;
+import net.minecraftforge.client.model.generators.*;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.registries.RegistryObject;
 import uk.me.msb.cinemashow.CinemaShow;
 import uk.me.msb.cinemashow.ScreenBlockName;
 import uk.me.msb.cinemashow.ShowProperties;
-import uk.me.msb.cinemashow.TileIterableIterator;
 import uk.me.msb.cinemashow.block.Facing;
 import uk.me.msb.cinemashow.block.ScreenBlock;
-import uk.me.msb.cinemashow.block.ScreenState;
 import uk.me.msb.cinemashow.setup.Registration;
 
 import java.awt.*;
@@ -62,58 +56,73 @@ public class GenBlockStates extends BlockStateProvider {
 
         // for each screen block ..
         for (RegistryObject<Block> screenBlock: Registration.BLOCKS.getEntries()) {
-            // .. create a state file with `defaultModel` as the default block model.
-            MultiPartBlockStateBuilder stateBuilder = getMultipartBuilder(screenBlock.get());
-            stateBuilder.part().modelFile(defaultModel).addModel();
-            // if that screen block has a show assigned create the additional show models and
-            // conditionally reference them in the state.
+            // .. does it have a show assigned?
             ScreenBlockName blockName = ScreenBlockName.fromBlock(screenBlock);
             ShowProperties properties = Registration.SHOW_PROPERTIES.get(blockName);
-            if (properties != null) {
-                createShowModelsAndState(properties, stateBuilder);
+            if (properties == null) {
+                // no show so create a state file with `defaultModel` as the default block model.
+                MultiPartBlockStateBuilder stateBuilder = getMultipartBuilder(screenBlock.get());
+                stateBuilder.part().modelFile(defaultModel).addModel();
+            } else {
+                VariantBlockStateBuilder stateBuilder = getVariantBuilder(screenBlock.get());
+                createShowModelsAndState(properties, stateBuilder, defaultModel);
             }
         }
     }
 
     /**
-     * Create all the models for the show's tiles (blocks) and conditionally add them to the `showState` resource.
+     * Create all the models for the show's tiles (blocks) and create the block's state file with
+     * variants mapping all the state combinations to these models with a correct rotations.
      *
      * @param properties the show's metadata
-     * @param showState the builder for the screen block's state resource
+     * @param stateBuilder the variant builder for the screen block's state resource
+     * @param defaultModel the default block model
      */
-    private void createShowModelsAndState(ShowProperties properties, MultiPartBlockStateBuilder showState) {
-        // For each tile (block) of the show ..
-        for (Point tile: new TileIterableIterator(properties)) {
+    private void createShowModelsAndState(
+            ShowProperties properties, VariantBlockStateBuilder stateBuilder, BlockModelBuilder defaultModel
+    ) {
+        // for each combination of screen state ..
+        stateBuilder.forAllStates(showState -> {
+            ConfiguredModel.Builder<?> builder = ConfiguredModel.builder();
 
-            // .. create a block model resource mapping the show tile texture to the `NORTH` face of the block.
+            Facing facing = showState.getValue(ScreenBlock.FACING);
+            int x = showState.getValue(ScreenBlock.SCREEN_X);
+            int y = showState.getValue(ScreenBlock.SCREEN_Y);
 
-            String modelName = String.format(
-                    "block/%s_%d_%d", properties.getAssignToBlock(), tile.x, tile.y
-            );
-            BlockModelBuilder tileModel = models().getBuilder(modelName);
-            tileModel.parent(models().getExistingFile(mcLoc("block/cube_all")));
-   
-            tileModel.texture("screen", modLoc(modelName));
-            tileModel.texture("back", modLoc("block/screen_base"));
-   
-            tileModel.element()
-                    .from(0, 0, 0)
-                    .to(16, 16, 16)
-                    .allFaces((direction, faceBuilder) -> faceBuilder.texture(
-                            direction == Direction.NORTH ? "#screen" : "#back")
-                    ).end();
+            // .. if state coords lie within the show's bounds ..
+            if (x < properties.getBlocksX() && y < properties.getBlocksY()) {
+                // .. create a block model resource mapping the show tile texture to the `NORTH` face of the block.
 
-            // Conditionally add all possible rotations of `tileModel` to the `showState` resource.
-            for (Map.Entry<Facing, Point> rotation: ROTATIONS.entrySet()) {
-                ConfiguredModel.Builder<PartBuilder> part = showState.part().modelFile(tileModel);
-                if (rotation.getValue().x != 0) {
-                    part = part.rotationX(rotation.getValue().x);
+                String modelName = String.format(
+                        "block/%s_%d_%d", properties.getAssignToBlock(), x, y
+                );
+                BlockModelBuilder tileModel = models().getBuilder(modelName);
+                tileModel.parent(models().getExistingFile(mcLoc("block/cube_all")));
+
+                tileModel.texture("screen", modLoc(modelName));
+                tileModel.texture("back", modLoc("block/screen_base"));
+
+                tileModel.element()
+                        .from(0, 0, 0)
+                        .to(16, 16, 16)
+                        .allFaces((direction, faceBuilder) -> faceBuilder.texture(
+                                direction == Direction.NORTH ? "#screen" : "#back")
+                        ).end();
+
+                // Create the variant state mapping using the rotation defined in `ROTATIONS`.
+                builder.modelFile(tileModel);
+                Point rotation = ROTATIONS.get(facing);
+                if (rotation.x != 0) {
+                    builder = builder.rotationX(rotation.x);
                 }
-                if (rotation.getValue().y != 0) {
-                    part = part.rotationY(rotation.getValue().y);
+                if (rotation.y != 0) {
+                    builder = builder.rotationY(rotation.y);
                 }
-                part.addModel().condition(ScreenBlock.SCREEN, new ScreenState(tile.x, tile.y, rotation.getKey()));
+            } else {
+                // If out of bounds, just map the default model.
+                builder.modelFile(defaultModel);
             }
-        }
+            return builder.build();
+        });
     }
 }

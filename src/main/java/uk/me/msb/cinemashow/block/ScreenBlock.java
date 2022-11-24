@@ -7,6 +7,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.Material;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,9 +25,17 @@ public class ScreenBlock extends Block {
     public static final Logger LOGGER = LogManager.getLogger();
 
     /**
-     * Single instance of `ScreenStateProperty`
+     * Single instance of `FacingProperty`
      */
-    public static final ScreenStateProperty SCREEN = ScreenStateProperty.create();
+    public static final FacingProperty FACING = FacingProperty.create();
+    /**
+     * State property indicating the show tile x position
+     */
+    public static final IntegerProperty SCREEN_X = IntegerProperty.create("x", 0, ShowProperties.BLOCKS_X_MAX - 1);
+    /**
+     * State property indicating the show tile y position
+     */
+    public static final IntegerProperty SCREEN_Y = IntegerProperty.create("y", 0, ShowProperties.BLOCKS_Y_MAX - 1);
 
     public ScreenBlock() {
         super(BlockBehaviour.Properties.of(Material.DIRT));
@@ -34,14 +43,14 @@ public class ScreenBlock extends Block {
 
     
     /** 
-     * The new `ScreenStateProperty` is registered here
+     * The new `FACING`, `SCREEN_X`, and `SCREEN_Y` properties are registered here.
      * 
      * @param builder for registering new state properties
      */
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
-        builder.add(SCREEN);
+        builder.add(FACING).add(SCREEN_X).add(SCREEN_Y);
     }
 
     
@@ -69,23 +78,22 @@ public class ScreenBlock extends Block {
 
         // check in each direction for a matching screen block
         for (Direction direction: Direction.values()) {
-            BlockState adjoiningBlockState = context.getLevel().getBlockState(clickedPos.relative(direction.getOpposite()));
-            if (ScreenBlockName.fromBlock(adjoiningBlockState.getBlock()) == props.getAssignToBlock()) {
+            BlockState adjoiningState = context.getLevel().getBlockState(clickedPos.relative(direction.getOpposite()));
+            if (ScreenBlockName.fromBlock(adjoiningState.getBlock()) == props.getAssignToBlock()) {
                 // a match was found so check if `direction` qualifies as a valid direction to extend the screen
                 // (up and right, relatively).
-                ScreenState adjoiningState = adjoiningBlockState.getValue(SCREEN);
-                ExtensionDirection extension = ExtensionDirection.get(adjoiningState.facing);
+                Facing adjoiningFacing = adjoiningState.getValue(FACING);
+                int adjoiningX = adjoiningState.getValue(SCREEN_X);
+                int adjoiningY = adjoiningState.getValue(SCREEN_Y);
+                ExtensionDirection extension = ExtensionDirection.get(adjoiningFacing);
                 if (direction == extension.x() || direction == extension.y()) {
                     // `direction` is a valid extension direction so create new screen block state with a matching
                     // `Facing` and the new calculated tile position extending from the existing block.
-                    ScreenState newScreenState = new ScreenState(
-                            adjoiningState.x + (direction == extension.x() ? 1 : 0),
-                            adjoiningState.y + (direction == extension.y() ? -1 : 0),
-                            adjoiningState.facing
-                    );
-                    // check that the 
-                    if (newScreenState.x < props.getBlocksX() && newScreenState.y >= 0) {
-                        return bs.setValue(SCREEN, newScreenState);
+                    int x = adjoiningX + (direction == extension.x() ? 1 : 0);
+                    int y = adjoiningY + (direction == extension.y() ? -1 : 0);
+                    // check that the new show block lies within the bounds of the screen
+                    if (x < props.getBlocksX() && y >= 0) {
+                        return bs.setValue(FACING, adjoiningFacing).setValue(SCREEN_X, x).setValue(SCREEN_Y, y);
                     }
                 }
             }
@@ -96,6 +104,8 @@ public class ScreenBlock extends Block {
 
         LOGGER.debug(String.format("Player facing: %s", facing));
 
-        return bs.setValue(SCREEN, new ScreenState(0, props.getBlocksY() - 1, facing.getOpposite()));
+        return bs.setValue(FACING, facing.getOpposite())
+                .setValue(SCREEN_X, 0)
+                .setValue(SCREEN_Y, props.getBlocksY() - 1);
     }
 }
