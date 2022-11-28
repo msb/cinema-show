@@ -11,7 +11,6 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.Material;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.me.msb.cinemashow.ScreenBlockName;
 import uk.me.msb.cinemashow.ShowProperties;
 import uk.me.msb.cinemashow.setup.Registration;
 
@@ -69,17 +68,10 @@ public class ScreenBlock extends Block {
         BlockPos clickedPos = context.getClickedPos();
         Facing facing = Facing.getFacingForEntity(context.getPlayer());
 
-        ShowProperties props = Registration.SHOW_PROPERTIES.get(ScreenBlockName.fromBlock(this));
-
-        if (props == null) {
-            // this screen isn't assigned a show so no need to set screen state
-            return bs;
-        }
-
         // check in each direction for a matching screen block
         for (Direction direction: Direction.values()) {
             BlockState adjoiningState = context.getLevel().getBlockState(clickedPos.relative(direction.getOpposite()));
-            if (ScreenBlockName.fromBlock(adjoiningState.getBlock()) == props.getAssignToBlock()) {
+            if (getBlockName(adjoiningState.getBlock()).equals(Registration.showProps.getShowSlug())) {
                 // a match was found so check if `direction` qualifies as a valid direction to extend the screen
                 // (up and right, relatively).
                 Facing adjoiningFacing = adjoiningState.getValue(FACING);
@@ -92,7 +84,7 @@ public class ScreenBlock extends Block {
                     int x = adjoiningX + (direction == extension.x() ? 1 : 0);
                     int y = adjoiningY + (direction == extension.y() ? -1 : 0);
                     // check that the new show block lies within the bounds of the screen
-                    if (x < props.getBlocksX() && y >= 0) {
+                    if (x < Registration.showProps.getBlocksX() && y >= 0) {
                         return bs.setValue(FACING, adjoiningFacing).setValue(SCREEN_X, x).setValue(SCREEN_Y, y);
                     }
                 }
@@ -106,6 +98,15 @@ public class ScreenBlock extends Block {
 
         return bs.setValue(FACING, facing.getOpposite())
                 .setValue(SCREEN_X, 0)
-                .setValue(SCREEN_Y, props.getBlocksY() - 1);
+                .setValue(SCREEN_Y, Registration.showProps.getBlocksY() - 1);
+    }
+
+    /**
+     * @param block a block object
+     * @return FIXME
+     */
+    public static String getBlockName(Block block) {
+        String id = block.getDescriptionId();
+        return id.substring(id.lastIndexOf(".") + 1);
     }
 }

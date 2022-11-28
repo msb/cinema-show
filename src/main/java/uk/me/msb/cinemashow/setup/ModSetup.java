@@ -2,6 +2,7 @@ package uk.me.msb.cinemashow.setup;
 
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 
 import javax.annotation.Nonnull;
@@ -16,7 +17,8 @@ public class ModSetup {
     public static final CreativeModeTab ITEM_GROUP = new CreativeModeTab(TAB_NAME) {
         @Nonnull
         public ItemStack makeIcon() {
-            return new ItemStack(Registration.TAB_TITLE_ITEM.get());
+            // FIXME
+            return new ItemStack(Items.DIAMOND);
         }
     };
 
