@@ -5,7 +5,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraftforge.common.data.LanguageProvider;
 import net.minecraftforge.registries.RegistryObject;
 import org.apache.commons.text.WordUtils;
-import uk.me.msb.cinemashow.CinemaShow;
 import uk.me.msb.cinemashow.ScreenBlockName;
 import uk.me.msb.cinemashow.setup.Registration;
 
@@ -17,7 +16,7 @@ import static uk.me.msb.cinemashow.setup.ModSetup.TAB_NAME;
 public class GenLanguageProvider extends LanguageProvider {
 
     public GenLanguageProvider(DataGenerator gen, String locale) {
-        super(gen, CinemaShow.MODID, locale);
+        super(gen, "cinemashow", locale);
     }
 
     @Override

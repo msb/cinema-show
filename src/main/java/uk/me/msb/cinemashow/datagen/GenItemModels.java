@@ -7,7 +7,6 @@ import net.minecraftforge.client.model.generators.ItemModelBuilder;
 import net.minecraftforge.client.model.generators.ItemModelProvider;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.registries.RegistryObject;
-import uk.me.msb.cinemashow.CinemaShow;
 import uk.me.msb.cinemashow.ScreenBlockName;
 import uk.me.msb.cinemashow.setup.Registration;
 
@@ -17,7 +16,7 @@ import uk.me.msb.cinemashow.setup.Registration;
 public class GenItemModels extends ItemModelProvider {
 
     public GenItemModels(DataGenerator generator, ExistingFileHelper existingFileHelper) {
-        super(generator, CinemaShow.MODID, existingFileHelper);
+        super(generator, "cinemashow", existingFileHelper);
     }
 
     @Override

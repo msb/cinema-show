@@ -10,7 +10,6 @@ import net.minecraftforge.client.model.generators.MultiPartBlockStateBuilder;
 import net.minecraftforge.client.model.generators.MultiPartBlockStateBuilder.PartBuilder;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.registries.RegistryObject;
-import uk.me.msb.cinemashow.CinemaShow;
 import uk.me.msb.cinemashow.ScreenBlockName;
 import uk.me.msb.cinemashow.ShowProperties;
 import uk.me.msb.cinemashow.TileIterableIterator;
@@ -50,7 +49,7 @@ public class GenBlockStates extends BlockStateProvider {
     }
 
     public GenBlockStates(DataGenerator gen, ExistingFileHelper helper) {
-        super(gen, CinemaShow.MODID, helper);
+        super(gen, "cinemashow", helper);
     }
 
     @Override

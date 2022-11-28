@@ -6,7 +6,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.me.msb.cinemashow.CinemaShow;
 
 /**
  * This class subscribes to the `GatherDataEvent` event. When this event occurs (when MCF is invoked in data generation
@@ -15,7 +14,7 @@ import uk.me.msb.cinemashow.CinemaShow;
  * - generate resources for screen block item models
  * - generate resources for the screen block names
  */
-@Mod.EventBusSubscriber(modid = CinemaShow.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@Mod.EventBusSubscriber(modid = "cinemashow", bus = Mod.EventBusSubscriber.Bus.MOD)
 @SuppressWarnings("unused")
 public class DataGenerators {
 

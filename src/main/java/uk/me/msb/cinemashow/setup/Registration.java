@@ -19,8 +19,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import static uk.me.msb.cinemashow.CinemaShow.MODID;
-
 /**
  * The class responsible for the following initialisations:
  * - loading show metadata
@@ -39,19 +37,22 @@ public class Registration {
     /**
      * A deferred registry of all screen blocks.
      */
-    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
+    public static DeferredRegister<Block> BLOCKS;
 
     /**
      * A deferred registry of all screen block items.
      */
-    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MODID);
+    public static DeferredRegister<Item> ITEMS;
 
-    public static void init() {
+    public static void init(String modId, ClassLoader loader) {
+
+        BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, modId);
+        ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, modId);
 
         // check each block name for any show metadata resource files and populate `SHOW_PROPERTIES`
         for (ScreenBlockName name: ScreenBlockName.values()) {
-            String resource = String.format("/assets/%s/%s.json", MODID, name);
-            InputStream metadata = name.getClass().getResourceAsStream(resource);
+            String resource = String.format("/assets/%s/%s.json", modId, name);
+            InputStream metadata = loader.getResourceAsStream(resource);
             if (metadata != null) {
                 try {
                     ShowProperties props = ShowProperties.create(metadata);
