@@ -4,15 +4,19 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import uk.me.msb.cinemashow.setup.ModSetup;
+import uk.me.msb.cinemashow.setup.Registration;
 
 /**
- * The "main" class for the cinema show mod
+ * FIXME
  */
-@Mod("cinemashow")
-public class CinemaShow {
+@SuppressWarnings("unused")
+public abstract class AbstractShow {
 
-    public CinemaShow()
+    public AbstractShow(String modId)
     {
+        // Register the deferred registries
+        Registration.init(modId, getClass().getClassLoader());
+
         // Register the setup method for modloading
         IEventBus modbus = FMLJavaModLoadingContext.get().getModEventBus();
         modbus.addListener(ModSetup::init);

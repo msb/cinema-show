@@ -6,6 +6,10 @@ import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 
 import java.io.*;
+import java.text.Normalizer;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 /**
  * Model class defining a show's properties. `create()` read the properties a YAML file using `ObjectMapper` and
@@ -64,14 +68,12 @@ public class ShowProperties {
      */
     private transient String mcmeta;
 
-    /**
-     * The screen block the show is assigned to.
-     */
-    @SuppressWarnings("unused") // used by `GSON.fromJson()`
-    private ScreenBlockName assignToBlock;
-
     public String getShowName() {
         return showName;
+    }
+
+    public String getShowSlug() {
+        return slugify(showName);
     }
 
     public int getBlocksX() {
@@ -120,10 +122,6 @@ public class ShowProperties {
             throw new IllegalArgumentException("frameTime should be greater than zero");
         }
         this.frameTime = frameTime;
-    }
-
-    public ScreenBlockName getAssignToBlock() {
-        return assignToBlock;
     }
 
     public String getMcmeta() {
@@ -181,5 +179,35 @@ public class ShowProperties {
         try (Writer writer = new FileWriter(metadata)) {
             GSON.toJson(this, writer);
         }
+    }
+
+    private static final Pattern PATTERN_NON_ASCII = Pattern.compile("[^\\p{ASCII}]+");
+    private static final Pattern PATTERN_UNDERSCORE_SEPARATOR = Pattern.compile("[[^a-zA-Z0-9\\-]\\s+]+");
+    private static final Pattern PATTERN_TRIM_DASH = Pattern.compile("^-|-$");
+
+    /**
+     * FIXME https://github.com/slugify/slugify
+     *
+     * @param text
+     * @return
+     */
+    private String slugify(final String text) {
+        return Optional.ofNullable(text)
+                // remove leading and trailing whitespaces
+                .map(String::trim)
+                // run subsequent calls only if string is not empty
+                .filter(Predicate.not(""::equals))
+                // transliterate or normalize
+                .map(str -> Normalizer.normalize(str, Normalizer.Form.NFKD))
+                // remove all remaining non ascii chars
+                .map(str -> PATTERN_NON_ASCII.matcher(str).replaceAll(""))
+                // replace remaining chars matching a pattern with underscore/hyphen
+                .map(str -> PATTERN_UNDERSCORE_SEPARATOR.matcher(str).replaceAll("_"))
+                // remove leading and trailing dashes
+                .map(str -> PATTERN_TRIM_DASH.matcher(str).replaceAll(""))
+                // convert to lower case if needed
+                .map(str -> str.toLowerCase())
+                // return empty string if input is null or empty
+                .orElse("");
     }
 }

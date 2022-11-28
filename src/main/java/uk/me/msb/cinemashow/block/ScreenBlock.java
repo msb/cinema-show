@@ -10,7 +10,6 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.material.Material;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.me.msb.cinemashow.ScreenBlockName;
 import uk.me.msb.cinemashow.ShowProperties;
 import uk.me.msb.cinemashow.setup.Registration;
 
@@ -60,17 +59,10 @@ public class ScreenBlock extends Block {
         BlockPos clickedPos = context.getClickedPos();
         Facing facing = Facing.getFacingForEntity(context.getPlayer());
 
-        ShowProperties props = Registration.SHOW_PROPERTIES.get(ScreenBlockName.fromBlock(this));
-
-        if (props == null) {
-            // this screen isn't assigned a show so no need to set screen state
-            return bs;
-        }
-
         // check in each direction for a matching screen block
         for (Direction direction: Direction.values()) {
             BlockState adjoiningBlockState = context.getLevel().getBlockState(clickedPos.relative(direction.getOpposite()));
-            if (ScreenBlockName.fromBlock(adjoiningBlockState.getBlock()) == props.getAssignToBlock()) {
+            if (getBlockName(adjoiningBlockState.getBlock()) == Registration.showProps.getShowSlug()) {
                 // a match was found so check if `direction` qualifies as a valid direction to extend the screen
                 // (up and right, relatively).
                 ScreenState adjoiningState = adjoiningBlockState.getValue(SCREEN);
@@ -84,7 +76,7 @@ public class ScreenBlock extends Block {
                             adjoiningState.facing
                     );
                     // check that the 
-                    if (newScreenState.x < props.getBlocksX() && newScreenState.y >= 0) {
+                    if (newScreenState.x < Registration.showProps.getBlocksX() && newScreenState.y >= 0) {
                         return bs.setValue(SCREEN, newScreenState);
                     }
                 }
@@ -96,6 +88,15 @@ public class ScreenBlock extends Block {
 
         LOGGER.debug(String.format("Player facing: %s", facing));
 
-        return bs.setValue(SCREEN, new ScreenState(0, props.getBlocksY() - 1, facing.getOpposite()));
+        return bs.setValue(SCREEN, new ScreenState(0, Registration.showProps.getBlocksY() - 1, facing.getOpposite()));
+    }
+
+    /**
+     * @param block a block object
+     * @return FIXME
+     */
+    public static String getBlockName(Block block) {
+        String id = block.getDescriptionId();
+        return id.substring(id.lastIndexOf(".") + 1);
     }
 }
