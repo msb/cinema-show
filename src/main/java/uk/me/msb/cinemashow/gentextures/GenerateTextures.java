@@ -100,7 +100,8 @@ public class GenerateTextures {
         // scale each show image and keep in a list
         List<BufferedImage> frameImages = new ArrayList<>();
         File[] frames = Objects.requireNonNull(showDir.listFiles());
-        Arrays.sort(frames);
+        // the texture image runs in reverse order - so we sort in reverse here
+        Arrays.sort(frames, Collections.reverseOrder());
         for (File frame: frames) {
             if (frame.isFile()) {
                 BufferedImage sourceImage = ImageIO.read(frame);
