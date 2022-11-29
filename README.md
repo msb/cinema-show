@@ -1,5 +1,7 @@
 # Mineforge Mod - The Cinema Show
 
+FIXME 
+
 This project does 3 things:
 
 - Processes sets of images and outputs the resources block textures for a set of minecraft blocks

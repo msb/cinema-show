@@ -28,10 +28,4 @@ logs/
 # Files from Forge MDK
 forge*changelog.txt
 
-# input source images
-cinema-show-source/
-
-# resources generated from `runGenerateTextures`
-src/generatedTextures/
-# resources generated from `runData`
-src/generated/
+secret.properties
