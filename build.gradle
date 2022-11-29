@@ -158,6 +158,7 @@ publishing {
     }
     repositories {
         maven {
+            // FIXME publish to maven central
             name = "GitHubPackages"
             url = uri("https://maven.pkg.github.com/${secrets.gprUser}/cinema-show")
             credentials {
