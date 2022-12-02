@@ -6,19 +6,28 @@ import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 
 import java.io.*;
+import java.text.Normalizer;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 /**
- * Model class defining a show's properties. `create()` read the properties a YAML file using `ObjectMapper` and
- * validates them before returning the model.
+ * Model class defining a show's properties. `create()` reads the properties from a JSON file using `ObjectMapper`
+ * and validates them before returning the model.
  */
 public class ShowProperties {
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
     /**
-     * Gson instance.
+     * The name of the resource file that contains an index of all the shows built into the mod.
      */
-    private static final Gson GSON = new Gson();
+    public static final String SHOWINDEX_FILENAME = "shows.json";
+
+    /**
+     * Gson instance for mod.
+     */
+    public static final Gson GSON = new Gson();
 
     /**
      * Upper limit of blocksX.
@@ -42,6 +51,11 @@ public class ShowProperties {
     private String showName;
 
     /**
+     * The name for the show's screen block (a snake case slug of `showName` prefixed with `show_`)
+     */
+    private transient String blockName;
+
+    /**
      * The animation rate in game ticks.
      */
     private int frameTime;
@@ -61,14 +75,12 @@ public class ShowProperties {
      */
     private transient String mcmeta;
 
-    /**
-     * The screen block the show is assigned to.
-     */
-    @SuppressWarnings("unused") // used by `GSON.fromJson()`
-    private ScreenBlockName assignToBlock;
-
     public String getShowName() {
         return showName;
+    }
+
+    public String getBlockName() {
+        return blockName;
     }
 
     public int getBlocksX() {
@@ -119,10 +131,6 @@ public class ShowProperties {
         this.frameTime = frameTime;
     }
 
-    public ScreenBlockName getAssignToBlock() {
-        return assignToBlock;
-    }
-
     public String getMcmeta() {
         return mcmeta;
     }
@@ -136,6 +144,8 @@ public class ShowProperties {
      */
     public static ShowProperties create(InputStream metadata) throws IOException {
         ShowProperties props = GSON.fromJson(new InputStreamReader(metadata), ShowProperties.class);
+        // set to a snake case slug of `showName` prefixed with `show_`.
+        props.blockName = String.format("show_%s", slugify(props.showName));
         if (props.frameTime == 0) {
             props.setFrameTime(ShowProperties.DEFAULT_FRAME_TIME);
             LOGGER.warn("`frameTime` not defined - setting to {}", props.frameTime);
@@ -158,7 +168,7 @@ public class ShowProperties {
      */
     private static String createMcmeta(int frameTime) throws IOException {
         StringWriter writer = new StringWriter();
-        JsonWriter json = (new Gson()).newJsonWriter(writer);
+        JsonWriter json = GSON.newJsonWriter(writer);
         json.beginObject();
         json.name("animation").beginObject();
         json.name("frametime").value(frameTime);
@@ -178,5 +188,47 @@ public class ShowProperties {
         try (Writer writer = new FileWriter(metadata)) {
             GSON.toJson(this, writer);
         }
+    }
+
+    /**
+     * Regex pattern for removing non-ASCII.
+     */
+    private static final Pattern PATTERN_NON_ASCII = Pattern.compile("[^\\p{ASCII}]+");
+
+    /**
+     * Regex pattern for replacing non-alpha with `_`.
+     */
+    private static final Pattern PATTERN_UNDERSCORE_SEPARATOR = Pattern.compile("[[^a-zA-Z0-9\\-]\\s+]+");
+
+    /**
+     * Regex pattern for trimming `_`.
+     */
+    private static final Pattern PATTERN_TRIM_DASH = Pattern.compile("^_|_$");
+
+    /**
+     * Generates a snake case slug. Based on [`slugify`](https://github.com/slugify/slugify).
+     * TODO use library instead of importing.
+     *
+     * @param text text to slugify
+     * @return slugified text
+     */
+    private static String slugify(final String text) {
+        return Optional.ofNullable(text)
+                // remove leading and trailing whitespaces
+                .map(String::trim)
+                // run subsequent calls only if string is not empty
+                .filter(Predicate.not(""::equals))
+                // transliterate or normalize
+                .map(str -> Normalizer.normalize(str, Normalizer.Form.NFKD))
+                // remove all remaining non ascii chars
+                .map(str -> PATTERN_NON_ASCII.matcher(str).replaceAll(""))
+                // replace remaining chars matching a pattern with underscore/hyphen
+                .map(str -> PATTERN_UNDERSCORE_SEPARATOR.matcher(str).replaceAll("_"))
+                // remove leading and trailing dashes
+                .map(str -> PATTERN_TRIM_DASH.matcher(str).replaceAll(""))
+                // convert to lower case if needed
+                .map(String::toLowerCase)
+                // return empty string if input is null or empty
+                .orElse("");
     }
 }

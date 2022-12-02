@@ -10,13 +10,17 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.me.msb.cinemashow.ScreenBlockName;
+
+import com.google.gson.Gson;
+
 import uk.me.msb.cinemashow.ShowProperties;
 import uk.me.msb.cinemashow.block.ScreenBlock;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static uk.me.msb.cinemashow.CinemaShow.MODID;
@@ -34,7 +38,7 @@ public class Registration {
     /**
      * A map of the metadata for all defined shows keyed on their assign screen block.
      */
-    public static final Map<ScreenBlockName, ShowProperties> SHOW_PROPERTIES = new HashMap<>();
+    public static final Map<String, ShowProperties> SHOW_PROPERTIES = new HashMap<>();
 
     /**
      * A deferred registry of all screen blocks.
@@ -48,31 +52,51 @@ public class Registration {
 
     public static void init() {
 
-        // check each block name for any show metadata resource files and populate `SHOW_PROPERTIES`
-        for (ScreenBlockName name: ScreenBlockName.values()) {
-            String resource = String.format("/assets/%s/%s.json", MODID, name);
-            InputStream metadata = name.getClass().getResourceAsStream(resource);
-            if (metadata != null) {
+        // Read the show index resource
+        String assetsRoot = String.format("/assets/%s", MODID);
+        List<String> showBlockNames = readShowIndex(assetsRoot);
+
+        LOGGER.info(showBlockNames.toString());
+
+        // Read and cache the `ShowProperties` resource for each show and register the blocks/items.
+        for (String showBlockName: showBlockNames) {
+            String propsName = String.format("%s/%s.json", assetsRoot, showBlockName);
+            InputStream propsStream = Registration.class.getResourceAsStream(propsName);
+            if (propsStream != null) {
                 try {
-                    ShowProperties props = ShowProperties.create(metadata);
-                    SHOW_PROPERTIES.put(props.getAssignToBlock(), props);
+                    ShowProperties props = ShowProperties.create(propsStream);
+                    SHOW_PROPERTIES.put(showBlockName, props);
+                    // Note that we pick any of the resulting items for the invertory tab.
+                    TAB_TITLE_ITEM = itemFromBlock(BLOCKS.register(showBlockName, ScreenBlock::new));
                 } catch (IOException e) {
-                    throw new RuntimeException(String.format("Error parsing %s", resource), e);
+                    throw new RuntimeException(String.format("Error parsing %s", propsName), e);
                 }
             }
         }
 
         LOGGER.info(SHOW_PROPERTIES.toString());
 
-        // register all screen block and their items (saving one of the items for the tab title)
-        for (ScreenBlockName screenBlock: ScreenBlockName.values()) {
-            TAB_TITLE_ITEM = itemFromBlock(BLOCKS.register(screenBlock.name(), ScreenBlock::new));
-        }
-
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
-        // register registries?
+        // register the deferred registries
         BLOCKS.register(bus);
         ITEMS.register(bus);
+    }
+
+    /**
+     * Read the show index resource file from the mod's asset's root.
+     * 
+     * @param assetsRoot the mod's resource asset root.
+     * @return a list of show block names
+     */
+    private static List<String> readShowIndex(String assetsRoot) {
+        String showIndex = String.format("%s/%s", assetsRoot, ShowProperties.SHOWINDEX_FILENAME);
+        InputStream showsInput = Registration.class.getResourceAsStream(showIndex);
+        if (showsInput == null) {
+            throw new RuntimeException(String.format("Error reading resource: %s", showIndex));
+        }
+        @SuppressWarnings("unchecked")
+        List<String> showBlockNames = (new Gson()).fromJson(new InputStreamReader(showsInput), List.class);
+        return showBlockNames;
     }
 
     /**

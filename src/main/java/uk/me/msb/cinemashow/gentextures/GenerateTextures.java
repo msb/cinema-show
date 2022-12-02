@@ -1,5 +1,6 @@
 package uk.me.msb.cinemashow.gentextures;
 
+import com.google.gson.stream.JsonWriter;
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 import uk.me.msb.cinemashow.ShowProperties;
@@ -24,7 +25,7 @@ public class GenerateTextures {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     /**
-     * The expected file name of the YAML file for the show's properties.
+     * The expected file name of the JSON file for the show's properties.
      */
     public static final String METADATA_FILENAME = "meta.json";
 
@@ -65,11 +66,13 @@ public class GenerateTextures {
             throw new RuntimeException("IO error creating the destination folder", e);
         }
 
+        final List<String> showBlockNames = new ArrayList<>();
+
         // Processes each show sub-folder.
         for (File showDir: Objects.requireNonNull(srcDir.listFiles())) {
             if (showDir.isDirectory()) {
                 try {
-                    processShow(showDir);
+                    showBlockNames.add(processShow(showDir));
                 } catch (IOException e) {
                     throw new RuntimeException(
                         String.format("IO error processing: %s", showDir.getAbsolutePath()), e
@@ -77,15 +80,19 @@ public class GenerateTextures {
                 }
             }
         }
+
+        // Save the list of show block names as an index resource file.
+        saveShowIndex(showBlockNames);
     }
 
     /**
      * Outputs the animated show textures for the images in a given show sub-folder.
      * 
      * @param showDir the show sub-folder being processed
+     * @return the processed show's block name
      * @throws IOException possible error when reading/writing reosurces
      */
-    public void processShow(File showDir) throws IOException {
+    public String processShow(File showDir) throws IOException {
 
         // read the show's properties
         File metadata = new File(showDir.getAbsolutePath(), METADATA_FILENAME);
@@ -132,18 +139,20 @@ public class GenerateTextures {
                 i ++;
             }
 
-            // write the animated texture image and associated metadata to the assigned screen
-            // block (the tile position is also encoded in the file name)
+            // write the animated texture image and associated metadata to the screen block
+            // (the tile position is also encoded in the file name)
             String outputFileName = String.format(
-                "%s_%d_%d", props.getAssignToBlock(), position.x, position.y
+                "%s_%d_%d", props.getBlockName(), position.x, position.y
             );
             outputImage(outputFileName, outputImage);
             outputMetadata(outputFileName, props);
         }
 
         // Save the updated `ShowProperties` as a resource (to be available in-game, etc)
-        String metadataResourceName = String.format("%s.json", props.getAssignToBlock());
+        String metadataResourceName = String.format("%s.json", props.getBlockName());
         props.save(new File(assetsDir, metadataResourceName));
+
+        return props.getBlockName();
     }
 
     /**
@@ -213,6 +222,28 @@ public class GenerateTextures {
         );
         try (Writer writer = new FileWriter(metadataFile)) {
             writer.write(props.getMcmeta());
+        }
+    }
+
+    /**
+     * Saves the list of all the show block names as a JSON resource file to the root of the mod's assets resource
+     * folders.
+     * 
+     * @param showBlockNames a list of all the show block names
+     */
+    private void saveShowIndex(final List<String> showBlockNames) {
+        try {
+            JsonWriter json = ShowProperties.GSON.newJsonWriter(
+                new FileWriter(new File(assetsDir, ShowProperties.SHOWINDEX_FILENAME))
+            );
+            json.beginArray();
+            for (String showSlug: showBlockNames) {
+                json.value(showSlug);
+            }
+            json.endArray();
+            json.close();
+        } catch (IOException e) {
+            throw new RuntimeException(String.format("IO error creating `%s`", ShowProperties.SHOWINDEX_FILENAME), e);
         }
     }
 

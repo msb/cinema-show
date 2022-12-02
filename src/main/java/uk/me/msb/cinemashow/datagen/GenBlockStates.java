@@ -7,7 +7,6 @@ import net.minecraftforge.client.model.generators.*;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.registries.RegistryObject;
 import uk.me.msb.cinemashow.CinemaShow;
-import uk.me.msb.cinemashow.ScreenBlockName;
 import uk.me.msb.cinemashow.ShowProperties;
 import uk.me.msb.cinemashow.block.Facing;
 import uk.me.msb.cinemashow.block.ScreenBlock;
@@ -49,24 +48,17 @@ public class GenBlockStates extends BlockStateProvider {
 
     @Override
     protected void registerStatesAndModels() {
-        // create a simple default screen block model using the `block/screen_base` texture.
+        // Create a simple default screen block model using the `block/screen_base` texture.
         BlockModelBuilder defaultModel = models().getBuilder("block/screen_base");
         defaultModel.parent(models().getExistingFile(mcLoc("cube_all")));
         defaultModel.texture("all", modLoc("block/screen_base"));
 
-        // for each screen block ..
+        // Create all mode and state resources for each screen block.
         for (RegistryObject<Block> screenBlock: Registration.BLOCKS.getEntries()) {
-            // .. does it have a show assigned?
-            ScreenBlockName blockName = ScreenBlockName.fromBlock(screenBlock);
+            String blockName = screenBlock.getId().getPath();
             ShowProperties properties = Registration.SHOW_PROPERTIES.get(blockName);
-            if (properties == null) {
-                // no show so create a state file with `defaultModel` as the default block model.
-                MultiPartBlockStateBuilder stateBuilder = getMultipartBuilder(screenBlock.get());
-                stateBuilder.part().modelFile(defaultModel).addModel();
-            } else {
-                VariantBlockStateBuilder stateBuilder = getVariantBuilder(screenBlock.get());
-                createShowModelsAndState(properties, stateBuilder, defaultModel);
-            }
+            VariantBlockStateBuilder stateBuilder = getVariantBuilder(screenBlock.get());
+            createShowModelsAndState(properties, stateBuilder, defaultModel);
         }
     }
 
@@ -94,7 +86,7 @@ public class GenBlockStates extends BlockStateProvider {
                 // .. create a block model resource mapping the show tile texture to the `NORTH` face of the block.
 
                 String modelName = String.format(
-                        "block/%s_%d_%d", properties.getAssignToBlock(), x, y
+                        "block/%s_%d_%d", properties.getBlockName(), x, y
                 );
                 BlockModelBuilder tileModel = models().getBuilder(modelName);
                 tileModel.parent(models().getExistingFile(mcLoc("block/cube_all")));
