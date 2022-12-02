@@ -18,6 +18,9 @@ same direction as the other block). If you place a screen block above/right outs
 the show it will render as a new bottom left tile. If you place a screen block anywhere else it
 also will render as a new bottom left tile.
 
+To get a better idea of the mechanics have a look at
+[an in-game demonstration of the block](https://youtu.be/v1jXgT7rQ5g).
+
 ## How the image processing works
 
 As an illustration, consider the following set of images.
@@ -85,7 +88,6 @@ Note:
 
 ## Assumptions/Limitations/Notes
 
-- [An in-game example](https://youtu.be/OOTtlrH0opE). TODO replace this with a better one.
 - When testing with server you need to:
   - update `run/eula.txt`
   - in `run/server.properties` set `online-mode=false`
