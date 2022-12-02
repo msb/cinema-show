@@ -4,9 +4,7 @@ import net.minecraft.data.DataGenerator;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.common.data.LanguageProvider;
 import net.minecraftforge.registries.RegistryObject;
-import org.apache.commons.text.WordUtils;
 import uk.me.msb.cinemashow.CinemaShow;
-import uk.me.msb.cinemashow.ScreenBlockName;
 import uk.me.msb.cinemashow.setup.Registration;
 
 import static uk.me.msb.cinemashow.setup.ModSetup.TAB_NAME;
@@ -26,15 +24,9 @@ public class GenLanguageProvider extends LanguageProvider {
         // for each screen block ..
         for (RegistryObject<Block> screenBlock: Registration.BLOCKS.getEntries()) {
             final String name;
-            ScreenBlockName blockName = ScreenBlockName.fromBlock(screenBlock);
-            // .. if the screen is assigned to a show ..
-            if (Registration.SHOW_PROPERTIES.containsKey(blockName)) {
-                // .. give it the show name ..
-                name = Registration.SHOW_PROPERTIES.get(blockName).getShowName();
-            } else {
-                // .. else change the screen block name into something more readible.
-                name = WordUtils.capitalize(blockName.name().replace("_", " "));
-            }
+            String blockName = screenBlock.getId().getPath();
+            // give the screen the show name
+            name = Registration.SHOW_PROPERTIES.get(blockName).getShowName();
             add(screenBlock.get(), name);
         }
     }

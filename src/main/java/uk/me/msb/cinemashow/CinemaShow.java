@@ -17,7 +17,7 @@ public class CinemaShow {
 
     public CinemaShow()
     {
-        // Register the deferred registry
+        // Register the deferred registries
         Registration.init();
 
         // Register the setup method for modloading

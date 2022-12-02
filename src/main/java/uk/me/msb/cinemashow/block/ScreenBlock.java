@@ -11,7 +11,6 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.Material;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.me.msb.cinemashow.ScreenBlockName;
 import uk.me.msb.cinemashow.ShowProperties;
 import uk.me.msb.cinemashow.setup.Registration;
 
@@ -69,18 +68,13 @@ public class ScreenBlock extends Block {
         BlockPos clickedPos = context.getClickedPos();
         Facing facing = Facing.getFacingForEntity(context.getPlayer());
 
-        ShowProperties props = Registration.SHOW_PROPERTIES.get(ScreenBlockName.fromBlock(this));
-
-        if (props == null) {
-            // this screen isn't assigned a show so no need to set screen state
-            return bs;
-        }
+        ShowProperties props = Registration.SHOW_PROPERTIES.get(getBlockName(this));
 
         // check in each direction for a matching screen block
         for (Direction direction: Direction.values()) {
             BlockState adjoiningState = context.getLevel().getBlockState(clickedPos.relative(direction.getOpposite()));
-            if (ScreenBlockName.fromBlock(adjoiningState.getBlock()) == props.getAssignToBlock()) {
-                // a match was found so check if `direction` qualifies as a valid direction to extend the screen
+            if (getBlockName(adjoiningState.getBlock()).equals(props.getBlockName())) {
+                // a show match was found so check if `direction` qualifies as a valid direction to extend the screen
                 // (up and right, relatively).
                 Facing adjoiningFacing = adjoiningState.getValue(FACING);
                 int adjoiningX = adjoiningState.getValue(SCREEN_X);
@@ -100,12 +94,23 @@ public class ScreenBlock extends Block {
         }
 
         // No qualifying adjoining screen block was found to extend from or the placed block was outside the bounds of
-        // the show so create state for a bottom left tile of the show with the screen facing the player.
+        // the show. Therefore create state for a bottom left tile of the show with the screen facing the player.
 
         LOGGER.debug(String.format("Player facing: %s", facing));
 
         return bs.setValue(FACING, facing.getOpposite())
                 .setValue(SCREEN_X, 0)
                 .setValue(SCREEN_Y, props.getBlocksY() - 1);
+    }
+
+    /**
+     * TODO is there a cleaner way to get this?
+     * 
+     * @param block a block object
+     * @return the block's name (show slug)
+     */
+    private static String getBlockName(Block block) {
+        String id = block.getDescriptionId();
+        return id.substring(id.lastIndexOf(".") + 1);
     }
 }
