@@ -25,16 +25,22 @@ public class ShowScalingContext {
     final private ShowProperties props;
 
     /**
-     * The minimum length of the secondary axis of all the scaled frame images.
+     * Whether X is the defined axis.
+     */
+    final private boolean xDefinedAxis;
+
+    /**
+     * The minimum length of the secondary (undefined) axis of all the scaled frame images.
      */
     private int min2ndAxisLength = Integer.MAX_VALUE;
 
     public ShowScalingContext(ShowProperties props) {
         this.props = props;
+        xDefinedAxis = props.getBlocksY() == 0;
     }
 
     /**
-     * Get's the target scale frame using the scheme defined in the README (How the image
+     * Gets the target scale frame using the scheme defined in the README (How the image
      * processing works) . Also updates `min2ndAxisLength`.
      * 
      * @param imageWidth  the source frame image's width
@@ -43,21 +49,21 @@ public class ShowScalingContext {
      */
     public Dimension getScaleForImage(int imageWidth, int imageHeight) {
         Dimension scale = new Dimension();
-        if (props.getBlocksX() == 0) {
-            scale.height = props.getBlocksY() * PIXELS_PER_BLOCK;
-            scale.width = scale.height * imageWidth / imageHeight;
-            min2ndAxisLength = Math.min(min2ndAxisLength, scale.width);
-        } else {
+        if (xDefinedAxis) {
             scale.width = props.getBlocksX() * PIXELS_PER_BLOCK;
             scale.height = scale.width * imageHeight / imageWidth;
             min2ndAxisLength = Math.min(min2ndAxisLength, scale.height);
+        } else {
+            scale.height = props.getBlocksY() * PIXELS_PER_BLOCK;
+            scale.width = scale.height * imageWidth / imageHeight;
+            min2ndAxisLength = Math.min(min2ndAxisLength, scale.width);
         }
         return scale;
     }
 
     /**
      * Returns an `Iterable` that iterates over the positions of all the show's tiles.
-     * Also updates ShowProperties.blocks2ndAxis.
+     * Also updates the blocks 2nd axis length.
      * 
      * @return the `Iterable`
      */
@@ -65,10 +71,10 @@ public class ShowScalingContext {
         // rounds `min2ndAxisLength` down to the nearest `PIXELS_PER_BLOCK` (idempotent)
         min2ndAxisLength -= min2ndAxisLength % PIXELS_PER_BLOCK;
 
-        if (props.getBlocksX() == 0) {
-            props.setBlocksX(min2ndAxisLength / PIXELS_PER_BLOCK);
-        } else {
+        if (xDefinedAxis) {
             props.setBlocksY(min2ndAxisLength / PIXELS_PER_BLOCK);
+        } else {
+            props.setBlocksX(min2ndAxisLength / PIXELS_PER_BLOCK);
         }
         return new TileIterableIterator(props);
     }
@@ -79,10 +85,10 @@ public class ShowScalingContext {
      * @return the offset into the image used to crop along the secondary axis.
      */
     public Point getOffset(int imageWidth, int imageHeight) {
-        if (props.getBlocksX() == 0) {
-            return new Point((imageWidth - min2ndAxisLength) / 2, 0);
-        } else {
+        if (xDefinedAxis) {
             return new Point(0, (imageHeight - min2ndAxisLength) / 2);
+        } else {
+            return new Point((imageWidth - min2ndAxisLength) / 2, 0);
         }
     }
 }
