@@ -107,8 +107,7 @@ public class GenerateTextures {
         // scale each show image and keep in a list
         List<BufferedImage> frameImages = new ArrayList<>();
         File[] frames = Objects.requireNonNull(showDir.listFiles());
-        // the texture image runs in reverse order - so we sort in reverse here
-        Arrays.sort(frames, Collections.reverseOrder());
+        Arrays.sort(frames);
         for (File frame: frames) {
             if (frame.isFile()) {
                 BufferedImage sourceImage = ImageIO.read(frame);
@@ -123,16 +122,16 @@ public class GenerateTextures {
 
             // .. create an empty animated texture image that is 1 block wide and `n` blocks high
             // where `n` is the number of animation frames.
-            int outputImageHeight = ShowScalingContext.PIXELS_PER_BLOCK * frameImages.size();
             BufferedImage outputImage = new BufferedImage(
-                    ShowScalingContext.PIXELS_PER_BLOCK, outputImageHeight,
+                    ShowScalingContext.PIXELS_PER_BLOCK,
+                    ShowScalingContext.PIXELS_PER_BLOCK * frameImages.size(),
                     BufferedImage.TYPE_INT_RGB
             );
             // for each frame image crop `position` tile from that image and draw it into the
             // texture image
-            int i = 1;
+            int i = 0;
             for (BufferedImage scaledImage: frameImages) {
-                int textureYPos = outputImageHeight - i * ShowScalingContext.PIXELS_PER_BLOCK;
+                int textureYPos = i * ShowScalingContext.PIXELS_PER_BLOCK;
                 // the offset for cropping along the secondary axis.
                 Point offset = context.getOffset(scaledImage.getWidth(), scaledImage.getHeight());
                 drawFrameTile(scaledImage, offset, position, textureYPos, outputImage);
