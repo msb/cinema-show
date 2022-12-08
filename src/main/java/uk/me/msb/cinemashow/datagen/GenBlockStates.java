@@ -28,18 +28,18 @@ public class GenBlockStates extends BlockStateProvider {
     private static final Map<Facing, Point> ROTATIONS = new HashMap<>();
 
     static {
-        ROTATIONS.put(new Facing(Direction.NORTH), new Point(0, 0));
-        ROTATIONS.put(new Facing(Direction.EAST), new Point(0, 90));
-        ROTATIONS.put(new Facing(Direction.SOUTH), new Point(0, 180));
-        ROTATIONS.put(new Facing(Direction.WEST), new Point(0, 270));
-        ROTATIONS.put(new Facing(Direction.NORTH, Direction.DOWN), new Point(90, 0));
-        ROTATIONS.put(new Facing(Direction.EAST, Direction.DOWN), new Point(90, 90));
-        ROTATIONS.put(new Facing(Direction.SOUTH, Direction.DOWN), new Point(90, 180));
-        ROTATIONS.put(new Facing(Direction.WEST, Direction.DOWN), new Point(90, 270));
-        ROTATIONS.put(new Facing(Direction.NORTH, Direction.UP), new Point(270, 0));
-        ROTATIONS.put(new Facing(Direction.EAST, Direction.UP), new Point(270, 90));
-        ROTATIONS.put(new Facing(Direction.SOUTH, Direction.UP), new Point(270, 180));
-        ROTATIONS.put(new Facing(Direction.WEST, Direction.UP), new Point(270, 270));
+        ROTATIONS.put(Facing.NORTH, new Point(0, 0));
+        ROTATIONS.put(Facing.EAST, new Point(0, 90));
+        ROTATIONS.put(Facing.SOUTH, new Point(0, 180));
+        ROTATIONS.put(Facing.WEST, new Point(0, 270));
+        ROTATIONS.put(Facing.NORTH_DOWN, new Point(90, 0));
+        ROTATIONS.put(Facing.EAST_DOWN, new Point(90, 90));
+        ROTATIONS.put(Facing.SOUTH_DOWN, new Point(90, 180));
+        ROTATIONS.put(Facing.WEST_DOWN, new Point(90, 270));
+        ROTATIONS.put(Facing.NORTH_UP, new Point(270, 0));
+        ROTATIONS.put(Facing.EAST_UP, new Point(270, 90));
+        ROTATIONS.put(Facing.SOUTH_UP, new Point(270, 180));
+        ROTATIONS.put(Facing.WEST_UP, new Point(270, 270));
     }
 
     public GenBlockStates(DataGenerator gen, ExistingFileHelper helper) {
