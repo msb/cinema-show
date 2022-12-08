@@ -1,81 +1,66 @@
 package uk.me.msb.cinemashow.block;
 
 import net.minecraft.core.Direction;
+import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.entity.Entity;
 
 import javax.annotation.Nonnull;
-import java.util.Objects;
 
 /**
- * Model representing the direction an entity or block is facing. Note that two directions are required because if an
+ * Enum representing the direction an entity or block is facing. Note that two directions are required because if an
  * entity/block is facing `UP` it will still have a `horizontal` orientation.
  */
-public class Facing implements Comparable<Facing> {
+public enum Facing implements StringRepresentable {
 
-    /**
-     * All possible `horizontal` values.
-     */
-    public final static Direction[] HORIZONTAL = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
-
-    /**
-     * All possible `vertical` values.
-     */
-    public final static Direction[] VERTICAL = {null, Direction.UP, Direction.DOWN};
+    NORTH(Direction.NORTH),
+    EAST(Direction.EAST),
+    SOUTH(Direction.SOUTH),
+    WEST(Direction.WEST),
+    NORTH_DOWN(Direction.NORTH, Direction.DOWN),
+    EAST_DOWN(Direction.EAST, Direction.DOWN),
+    SOUTH_DOWN(Direction.SOUTH, Direction.DOWN),
+    WEST_DOWN(Direction.WEST, Direction.DOWN),
+    NORTH_UP(Direction.NORTH, Direction.UP),
+    EAST_UP(Direction.EAST, Direction.UP),
+    SOUTH_UP(Direction.SOUTH, Direction.UP),
+    WEST_UP(Direction.WEST, Direction.UP);
 
     /**
      * The horizontal `Direction` that an entity/block is facing.
      */
     @Nonnull
-    public final Direction horizontal;
+    private final Direction horizontal;
 
     /**
      * The vertical `Direction` that a player/block is facing (null for facing toward the horizon).
      */
-    public final Direction vertical;
+    private final Direction vertical;
 
-    public Facing(@Nonnull Direction horizontal, Direction vertical) {
+    Facing(@Nonnull Direction horizontal, Direction vertical) {
         this.horizontal = horizontal;
         this.vertical = vertical;
     }
 
-    public Facing(@Nonnull Direction horizontal) {
+    Facing(Direction horizontal) {
         this(horizontal, null);
     }
 
+    @Override
+    public String getSerializedName() {
+        return this.name().toLowerCase();
+    }
+
+    /**
+     * @return the opposite facing to the enum's value (see `FacingTest` for expected behaviour).
+     */
     public Facing getOpposite() {
-        if (vertical == null) {
-            return new Facing(horizontal.getOpposite());
-        }
-        return new Facing(horizontal.getOpposite(), vertical.getOpposite());
-    }
-
-    @Override
-    public String toString() {
-        return vertical == null ?
-            String.format("%s", horizontal) : String.format("%s_%s", horizontal, vertical);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Facing that = (Facing) o;
-        return horizontal == that.horizontal && vertical == that.vertical;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(horizontal, vertical);
-    }
-
-    @Override
-    public int compareTo(Facing o) {
-        return toString().compareTo(o.toString());
+        Direction vertical = this.vertical == null ? null : this.vertical.getOpposite();
+        return Facing.getFacing(this.horizontal.getOpposite(), vertical);
     }
 
     /**
      * @param entity an entity (always a player in this context)
-     * @return a `Facing` object representing the direction the entity is facing.
+     * @return a `Facing` value representing the direction the entity is facing.
      */
     public static Facing getFacingForEntity(Entity entity) {
         final Direction[] facing = Direction.orderedByNearest(entity);
@@ -83,9 +68,15 @@ public class Facing implements Comparable<Facing> {
         Direction vertical = null;
         if (facing[index] == Direction.DOWN || facing[index] == Direction.UP) {
             vertical = facing[index];
+            // The 2nd array element will now give the horizontal facing.
             index ++;
         }
-        final Direction horizontal = facing[index];
-        return new Facing(horizontal, vertical);
+        return Facing.getFacing(facing[index], vertical);
+    }
+
+    private static Facing getFacing(Direction horizontal, Direction vertical) {
+        String horizontal_name = horizontal.name();
+        String name = vertical == null ? horizontal_name : String.format("%s_%s", horizontal_name, vertical.name());
+        return valueOf(name);
     }
 }

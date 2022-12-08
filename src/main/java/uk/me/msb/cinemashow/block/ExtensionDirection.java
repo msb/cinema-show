@@ -16,46 +16,46 @@ import java.util.Map;
 public record ExtensionDirection(Direction x, Direction y) {
 
     /**
-     * A map of all possible `Facings` and their valid extension directions.
+     * A map of all possible `Facing` values and their valid extension directions.
      */
     private final static Map<Facing, ExtensionDirection> EXTENSIONS = new HashMap<>();
 
     static {
         EXTENSIONS.put(
-                new Facing(Direction.NORTH), new ExtensionDirection(Direction.WEST, Direction.UP)
+                Facing.NORTH, new ExtensionDirection(Direction.WEST, Direction.UP)
         );
         EXTENSIONS.put(
-                new Facing(Direction.EAST), new ExtensionDirection(Direction.NORTH, Direction.UP)
+                Facing.EAST, new ExtensionDirection(Direction.NORTH, Direction.UP)
         );
         EXTENSIONS.put(
-                new Facing(Direction.SOUTH), new ExtensionDirection(Direction.EAST, Direction.UP)
+                Facing.SOUTH, new ExtensionDirection(Direction.EAST, Direction.UP)
         );
         EXTENSIONS.put(
-                new Facing(Direction.WEST), new ExtensionDirection(Direction.SOUTH, Direction.UP)
+                Facing.WEST, new ExtensionDirection(Direction.SOUTH, Direction.UP)
         );
         EXTENSIONS.put(
-                new Facing(Direction.NORTH, Direction.DOWN), new ExtensionDirection(Direction.WEST, Direction.NORTH)
+                Facing.NORTH_DOWN, new ExtensionDirection(Direction.WEST, Direction.NORTH)
         );
         EXTENSIONS.put(
-                new Facing(Direction.EAST, Direction.DOWN), new ExtensionDirection(Direction.NORTH, Direction.EAST)
+                Facing.EAST_DOWN, new ExtensionDirection(Direction.NORTH, Direction.EAST)
         );
         EXTENSIONS.put(
-                new Facing(Direction.SOUTH, Direction.DOWN), new ExtensionDirection(Direction.EAST, Direction.SOUTH)
+                Facing.SOUTH_DOWN, new ExtensionDirection(Direction.EAST, Direction.SOUTH)
         );
         EXTENSIONS.put(
-                new Facing(Direction.WEST, Direction.DOWN), new ExtensionDirection(Direction.SOUTH, Direction.WEST)
+                Facing.WEST_DOWN, new ExtensionDirection(Direction.SOUTH, Direction.WEST)
         );
         EXTENSIONS.put(
-                new Facing(Direction.NORTH, Direction.UP), new ExtensionDirection(Direction.WEST, Direction.SOUTH)
+                Facing.NORTH_UP, new ExtensionDirection(Direction.WEST, Direction.SOUTH)
         );
         EXTENSIONS.put(
-                new Facing(Direction.EAST, Direction.UP), new ExtensionDirection(Direction.NORTH, Direction.WEST)
+                Facing.EAST_UP, new ExtensionDirection(Direction.NORTH, Direction.WEST)
         );
         EXTENSIONS.put(
-                new Facing(Direction.SOUTH, Direction.UP), new ExtensionDirection(Direction.EAST, Direction.NORTH)
+                Facing.SOUTH_UP, new ExtensionDirection(Direction.EAST, Direction.NORTH)
         );
         EXTENSIONS.put(
-                new Facing(Direction.WEST, Direction.UP), new ExtensionDirection(Direction.SOUTH, Direction.EAST)
+                Facing.WEST_UP, new ExtensionDirection(Direction.SOUTH, Direction.EAST)
         );
     }
 

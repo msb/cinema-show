@@ -7,6 +7,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.Material;
 import org.apache.logging.log4j.LogManager;
@@ -24,9 +25,9 @@ public class ScreenBlock extends Block {
     public static final Logger LOGGER = LogManager.getLogger();
 
     /**
-     * Single instance of `FacingProperty`
+     * State property indicating the direction the tile is facing
      */
-    public static final FacingProperty FACING = FacingProperty.create();
+    public static final EnumProperty<Facing> FACING = EnumProperty.create("facing", Facing.class);
     /**
      * State property indicating the show tile x position
      */
@@ -49,7 +50,7 @@ public class ScreenBlock extends Block {
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
-        builder.add(FACING).add(SCREEN_X).add(SCREEN_Y);
+        builder.add(FACING, SCREEN_X, SCREEN_Y);
     }
 
     

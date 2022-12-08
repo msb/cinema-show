@@ -11,6 +11,16 @@ group = "uk.me.msb.${archivesBaseName}" // http://maven.apache.org/guides/mini/g
 // Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
+// additional linting
+compileJava {
+    options.compilerArgs << '-Xlint:unchecked'
+}
+
+// enable JUnit
+test {
+    useJUnitPlatform()
+}
+
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 minecraft {
     // The mappings can be changed at any time and must be in the following format.
@@ -143,6 +153,10 @@ dependencies {
     // For more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
+
+    // JUnit dependencies
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 }
 
 // Example for how to get properties into the manifest for reading at runtime.
