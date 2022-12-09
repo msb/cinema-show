@@ -73,6 +73,9 @@ public class GenBlockStates extends BlockStateProvider {
     private void createShowModelsAndState(
             ShowProperties properties, VariantBlockStateBuilder stateBuilder, BlockModelBuilder defaultModel
     ) {
+        // we keep track of the tile models we've created
+        Map<Integer, BlockModelBuilder> existingTileModels = new HashMap<>();
+
         // for each combination of screen state ..
         stateBuilder.forAllStates(showState -> {
             ConfiguredModel.Builder<?> builder = ConfiguredModel.builder();
@@ -83,23 +86,32 @@ public class GenBlockStates extends BlockStateProvider {
 
             // .. if state coords lie within the show's bounds ..
             if (x < properties.getBlocksX() && y < properties.getBlocksY()) {
-                // .. create a block model resource mapping the show tile texture to the `NORTH` face of the block.
 
-                String modelName = String.format(
-                        "block/%s_%d_%d", properties.getBlockName(), x, y
-                );
-                BlockModelBuilder tileModel = models().getBuilder(modelName);
-                tileModel.parent(models().getExistingFile(mcLoc("block/cube_all")));
+                int tileModelKey = x + y * ShowProperties.BLOCKS_X_MAX;
 
-                tileModel.texture("screen", modLoc(modelName));
-                tileModel.texture("back", modLoc("block/screen_base"));
+                BlockModelBuilder tileModel = existingTileModels.get(tileModelKey);
 
-                tileModel.element()
-                        .from(0, 0, 0)
-                        .to(16, 16, 16)
-                        .allFaces((direction, faceBuilder) -> faceBuilder.texture(
-                                direction == Direction.NORTH ? "#screen" : "#back")
-                        ).end();
+                // .. and the model hasn't already been created..
+                if (tileModel == null) {
+                    // .. create a block model resource mapping the show tile texture to the `NORTH` face of the block
+                    String modelName = String.format(
+                            "block/%s_%d_%d", properties.getBlockName(), x, y
+                    );
+                    tileModel = models().getBuilder(modelName);
+                    tileModel.parent(models().getExistingFile(mcLoc("block/cube_all")));
+
+                    tileModel.texture("screen", modLoc(modelName));
+                    tileModel.texture("back", modLoc("block/screen_base"));
+
+                    tileModel.element()
+                            .from(0, 0, 0)
+                            .to(16, 16, 16)
+                            .allFaces((direction, faceBuilder) -> faceBuilder.texture(
+                                    direction == Direction.NORTH ? "#screen" : "#back")
+                            ).end();
+
+                    existingTileModels.put(tileModelKey, tileModel);
+                }
 
                 // Create the variant state mapping using the rotation defined in `ROTATIONS`.
                 builder.modelFile(tileModel);
